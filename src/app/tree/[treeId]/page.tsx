@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { getTreeMetadata, getMembers, getUser } from "@/lib/db";
+import { isDemoTreeId, DEMO_MEMBERS, DEMO_TREE } from "@/lib/demo-data";
 import FamilyTree from "@/components/tree/FamilyTree";
 import UltraLightTree from "@/components/tree/UltraLightTree";
 import ShraddhView from "@/components/tree/ShraddhView";
@@ -24,6 +25,16 @@ export default function TreeViewPage() {
   const [selfMemberId, setSelfMemberId] = useState<string | undefined>();
 
   useEffect(() => {
+    // Demo tree — load instantly, no Firestore
+    if (isDemoTreeId(treeId)) {
+      setTreeMeta(DEMO_TREE);
+      setMembers(DEMO_MEMBERS);
+      const selfMember = DEMO_MEMBERS.find((m) => m.relation === "self");
+      if (selfMember) setSelfMemberId(selfMember.id);
+      setLoading(false);
+      return;
+    }
+
     loadTree();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [treeId, user]);
@@ -39,7 +50,6 @@ export default function TreeViewPage() {
         setIsOwner(profile.role === "owner");
         const memberList = await getMembers(user.uid);
         setMembers(memberList);
-        // Find the self member for tree focus
         const selfMember = memberList.find(
           (m) => m.relation === "self" || m.relationGroup === "self" && m.generationLevel === 0
         );
