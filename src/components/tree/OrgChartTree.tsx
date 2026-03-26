@@ -351,21 +351,22 @@ export default function OrgChartTree({
   }, [focusedMemberId]);
 
   // Search
-  const searchMatches = useMemo(() => {
-    if (!searchQuery.trim()) return new Set<string>();
+  const searchMatchedMembers = useMemo(() => {
+    if (!searchQuery.trim()) return [];
     const q = searchQuery.toLowerCase();
-    return new Set(
-      members
-        .filter(
-          (m) =>
-            m.name.toLowerCase().includes(q) ||
-            (m.nameHi && m.nameHi.includes(q)) ||
-            m.relation.toLowerCase().includes(q) ||
-            (m.relationHi && m.relationHi.includes(q))
-        )
-        .map((m) => m.id)
+    return members.filter(
+      (m) =>
+        m.name.toLowerCase().includes(q) ||
+        (m.nameHi && m.nameHi.includes(q)) ||
+        m.relation.toLowerCase().includes(q) ||
+        (m.relationHi && m.relationHi.includes(q))
     );
   }, [searchQuery, members]);
+
+  const searchMatches = useMemo(
+    () => new Set(searchMatchedMembers.map((m) => m.id)),
+    [searchMatchedMembers]
+  );
 
   useEffect(() => {
     if (searchMatches.size > 0) {
@@ -378,6 +379,46 @@ export default function OrgChartTree({
       });
     }
   }, [searchMatches, members]);
+
+  // Navigate to a member card: uncollapse gen, pan to center it in view
+  const navigateToMember = useCallback((memberId: string) => {
+    const member = members.find((m) => m.id === memberId);
+    if (!member) return;
+
+    // Uncollapse the generation
+    setCollapsedGens((prev) => {
+      const next = new Set(prev);
+      next.delete(member.gen);
+      return next;
+    });
+
+    // Reset scale for accurate positioning
+    setScale(1);
+
+    // Wait for DOM to update after uncollapse
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        const container = scrollRef.current;
+        const el = container?.querySelector(`[data-member-id="${memberId}"]`) as HTMLElement | null;
+        if (!el || !container) return;
+
+        const containerRect = container.getBoundingClientRect();
+        const elRect = el.getBoundingClientRect();
+
+        // Calculate translate to center the element in the container
+        const targetX = containerRect.width / 2 - (elRect.left - containerRect.left + elRect.width / 2) + translate.x;
+        const targetY = containerRect.height / 2 - (elRect.top - containerRect.top + elRect.height / 2) + translate.y;
+
+        setTranslate({ x: targetX, y: targetY });
+
+        // Flash highlight
+        setTimeout(() => {
+          el.classList.add("ring-2", "ring-accent", "ring-offset-2");
+          setTimeout(() => el.classList.remove("ring-2", "ring-accent", "ring-offset-2"), 2000);
+        }, 200);
+      }, 150);
+    });
+  }, [members, translate]);
 
   const toggleMemberExpand = useCallback((id: string) => {
     setExpandedMembers((prev) => {
@@ -432,10 +473,37 @@ export default function OrgChartTree({
         </div>
       )}
 
-      {searchQuery && (
-        <p className="text-center text-xs text-dark/40">
-          {searchMatches.size} result{searchMatches.size !== 1 ? "s" : ""} found
-        </p>
+      {searchQuery && searchMatchedMembers.length > 0 && (
+        <div className="mx-auto w-full max-w-sm rounded-xl border border-border-warm bg-white shadow-lg overflow-hidden">
+          <p className="px-3 py-1.5 text-[10px] text-dark/40 border-b border-dark/5">
+            {searchMatches.size} result{searchMatches.size !== 1 ? "s" : ""} found
+          </p>
+          <div className="max-h-48 overflow-y-auto">
+            {searchMatchedMembers.map((m) => (
+              <button
+                key={m.id}
+                onClick={() => {
+                  navigateToMember(m.id);
+                  setSearchQuery("");
+                }}
+                className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-bg-muted border-b border-dark/5 last:border-0"
+              >
+                <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${genderDotClass(m.gender, m.alive !== false)}`} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-dark">{m.nameHi || m.name}</p>
+                  <p className="truncate text-[11px] text-dark/40">{m.name} · {m.relationHi || m.relation}</p>
+                </div>
+                <span className="material-symbols-rounded shrink-0 text-dark/20" style={{ fontSize: "16px" }}>
+                  my_location
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {searchQuery && searchMatchedMembers.length === 0 && (
+        <p className="text-center text-xs text-dark/40">कोई परिणाम नहीं / No results found</p>
       )}
 
       {/* Zoom controls */}
