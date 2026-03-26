@@ -1,25 +1,262 @@
+import Link from "next/link";
+import { AnimatedTree } from "@/components/ui/AnimatedTree";
+import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
+import { FeatureCard } from "@/components/ui/FeatureCard";
+import { DemoTree } from "@/components/tree/DemoTree";
+import { LanguageToggle } from "@/components/layout/LanguageToggle";
+
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-bg-primary px-4">
-      <div className="text-center">
-        <h1 className="font-hindi text-5xl font-bold text-earth md:text-7xl">
-          वंश वृक्ष
+    <div className="min-h-screen bg-bg-primary">
+      {/* Language Toggle */}
+      <div className="fixed right-4 top-4 z-50">
+        <LanguageToggle />
+      </div>
+
+      {/* ─── SECTION 1: HERO ─── */}
+      <section className="flex min-h-screen flex-col items-center justify-center px-4 text-center">
+        <AnimatedTree />
+        <h1 className="mt-6 font-hindi text-5xl font-bold text-earth md:text-7xl">
+          🌳 वंश वृक्ष
         </h1>
-        <p className="mt-2 text-lg text-earth/70">
-          Vansh Vriksh
-        </p>
-        <p className="mt-4 max-w-md text-base text-earth/60">
+        <p className="mt-3 max-w-lg text-lg text-earth/70">
           अपने पूर्वजों की विरासत को डिजिटल करें
-          <br />
-          <span className="text-sm">Digitize Your Ancestral Legacy</span>
         </p>
-        <div className="mt-6 inline-flex items-center rounded-full border border-border-warm bg-bg-muted px-4 py-1.5 text-sm text-earth/80">
+        <p className="text-base text-earth/50">
+          Digitize Your Ancestral Legacy
+        </p>
+        <div className="mt-4 inline-flex items-center rounded-full border border-gold/30 bg-gold/5 px-4 py-1.5 text-sm text-earth/80">
           100% मुफ्त | कोई विज्ञापन नहीं | सेवा
         </div>
-        <p className="mt-8 text-xs text-earth/40">
-          Coming soon...
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <Link
+            href="/search"
+            className="rounded-lg border-2 border-gold bg-earth px-6 py-3 font-semibold text-gold transition-colors hover:bg-earth/80"
+          >
+            🌳 मेरा वृक्ष खोजें / Find My Family Tree
+          </Link>
+          <Link
+            href="/verify"
+            className="rounded-lg bg-gold px-6 py-3 font-semibold text-earth transition-colors hover:bg-gold/90"
+          >
+            ✨ नया वृक्ष बनाएं / Create New Tree
+          </Link>
+        </div>
+      </section>
+
+      {/* ─── SECTION 2: WHAT IS IT ─── */}
+      <section className="bg-bg-muted px-4 py-16 md:py-24">
+        <div className="mx-auto max-w-3xl text-center">
+          <h2 className="font-hindi text-2xl font-semibold text-earth md:text-3xl">
+            यह क्या है? / What Is It?
+          </h2>
+          <p className="mt-4 text-lg leading-relaxed text-earth/80">
+            एक ऐसा मंच जहाँ आपका पूरा परिवार एक वृक्ष में जुड़ता है।
+          </p>
+          <p className="mt-2 leading-relaxed text-earth/60">
+            दादा-दादी से लेकर परपोती तक — 7 पीढ़ियां, 38+ रिश्ते।
+            <br />
+            WhatsApp पर लिंक भेजो, परिवार जुड़ता जाएगा।
+          </p>
+          <p className="mt-1 text-sm text-earth/40">
+            A platform where your entire family connects in one tree — 7 generations, 38+ relations.
+            Share on WhatsApp, family keeps growing.
+          </p>
+        </div>
+      </section>
+
+      {/* ─── SECTION 3: 6 FEATURE CARDS ─── */}
+      <section className="px-4 py-16 md:py-24">
+        <div className="mx-auto max-w-5xl">
+          <h2 className="mb-10 text-center font-hindi text-2xl font-semibold text-earth md:text-3xl">
+            विशेषताएं / Features
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <FeatureCard
+              icon="👨‍👩‍👧‍👦"
+              title="38+ रिश्ते"
+              description="दादा-दादी, बुआ-फूफा, साला-साली, देवरानी-जेठानी — सब शामिल"
+            />
+            <FeatureCard
+              icon="🙏"
+              title="गोत्र + कुलदेवी"
+              description="आपकी पूरी हिंदू पहचान — गोत्र, कुलदेवी, जाति, नक्षत्र, राशि"
+            />
+            <FeatureCard
+              icon="💑"
+              title="विवाह से परिवार जुड़ें"
+              description="बेटी की शादी हुई? दोनों परिवार के वृक्ष जुड़ जाते हैं"
+            />
+            <FeatureCard
+              icon="🕊"
+              title="श्राद्ध सहायक"
+              description="पिता, दादा, परदादा — 3 पीढ़ी एक क्लिक में"
+            />
+            <FeatureCard
+              icon="🔒"
+              title="गोपनीयता"
+              description="आपका डेटा सिर्फ आपका। गोत्र के अनुसार दिखता है"
+            />
+            <FeatureCard
+              icon="👴"
+              title="बुज़ुर्गों के लिए"
+              description="बच्चे दादा-दादी का डेटा जोड़ सकते हैं"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ─── SECTION 4: LIVE EXAMPLE (Demo Tree) ─── */}
+      <section className="bg-bg-muted px-4 py-16 md:py-24">
+        <div className="mx-auto max-w-4xl">
+          <h2 className="mb-2 text-center font-hindi text-2xl font-semibold text-earth md:text-3xl">
+            उदाहरण / Example Tree
+          </h2>
+          <p className="mb-8 text-center text-sm text-earth/50">
+            पाटिल परिवार — Patil Family (tap cards to expand)
+          </p>
+          <DemoTree />
+          <p className="mt-6 text-center text-xs text-earth/40">
+            यह उदाहरण है। अपना वृक्ष बनाने के लिए ऊपर क्लिक करें।
+            <br />
+            This is an example. Click above to create your own tree.
+          </p>
+        </div>
+      </section>
+
+      {/* ─── SECTION 5: HOW IT WORKS ─── */}
+      <section className="px-4 py-16 md:py-24">
+        <div className="mx-auto max-w-3xl">
+          <h2 className="mb-10 text-center font-hindi text-2xl font-semibold text-earth md:text-3xl">
+            कैसे काम करता है? / How It Works
+          </h2>
+          <div className="space-y-8">
+            {[
+              {
+                step: "1",
+                icon: "📱",
+                hi: "सत्यापन — Phone/Email OTP (30 सेकंड)",
+                en: "Verification — Phone/Email OTP (30 seconds)",
+              },
+              {
+                step: "2",
+                icon: "👨‍👩‍👧‍👦",
+                hi: "परिवार जोड़ें (5 मिनट प्रति सदस्य)",
+                en: "Add Family (5 minutes per member)",
+              },
+              {
+                step: "3",
+                icon: "📤",
+                hi: "WhatsApp पर भेजें — परिवार जुड़ता जाएगा",
+                en: "Share on WhatsApp — Family keeps growing",
+              },
+            ].map((s) => (
+              <div key={s.step} className="flex items-start gap-4">
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gold text-xl font-bold text-earth">
+                  {s.step}
+                </div>
+                <div>
+                  <div className="text-lg font-medium text-earth">
+                    {s.icon} {s.hi}
+                  </div>
+                  <div className="text-sm text-earth/50">{s.en}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── SECTION 6: SEVA DECLARATION ─── */}
+      <section className="bg-earth px-4 py-16 text-center md:py-24">
+        <div className="mx-auto max-w-3xl">
+          <p className="font-hindi text-2xl font-bold text-gold md:text-4xl">
+            सेवा परमो धर्मः
+          </p>
+          <p className="mt-2 text-lg text-gold/70">
+            Service is the highest duty
+          </p>
+          <div className="mt-10 grid grid-cols-2 gap-4 md:grid-cols-4">
+            {[
+              { icon: "🚫", text: "कोई विज्ञापन नहीं" },
+              { icon: "🆓", text: "सब कुछ मुफ्त" },
+              { icon: "🔒", text: "डेटा सिर्फ आपका" },
+              { icon: "🙏", text: "सभी के लिए" },
+            ].map((promise) => (
+              <div
+                key={promise.text}
+                className="rounded-lg border border-gold/20 bg-gold/5 px-3 py-4"
+              >
+                <div className="text-2xl">{promise.icon}</div>
+                <div className="mt-1 text-sm font-medium text-gold/90">
+                  {promise.text}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── SECTION 7: LIVE STATS ─── */}
+      <section className="px-4 py-16 md:py-24">
+        <div className="mx-auto max-w-3xl">
+          <div className="grid grid-cols-3 gap-6">
+            <AnimatedCounter target={0} label="परिवार / Families" />
+            <AnimatedCounter target={0} label="सदस्य / Members" />
+            <AnimatedCounter target={0} label="गोत्र / Gotras" />
+          </div>
+          <p className="mt-4 text-center text-sm text-earth/40">
+            आप पहले बनें! — Be the first!
+          </p>
+        </div>
+      </section>
+
+      {/* ─── SECTION 8: BOTTOM CTA ─── */}
+      <section className="bg-bg-muted px-4 py-16 text-center md:py-24">
+        <p className="mb-6 text-lg text-earth/60">
+          पहले देखो, फिर बनाओ — First check, then create
         </p>
-      </div>
-    </main>
+        <div className="flex flex-col justify-center gap-3 sm:flex-row">
+          <Link
+            href="/search"
+            className="rounded-lg border-2 border-gold bg-earth px-6 py-3 font-semibold text-gold transition-colors hover:bg-earth/80"
+          >
+            🌳 मेरा वृक्ष खोजें / Find My Family Tree
+          </Link>
+          <Link
+            href="/verify"
+            className="rounded-lg bg-gold px-6 py-3 font-semibold text-earth transition-colors hover:bg-gold/90"
+          >
+            ✨ नया वृक्ष बनाएं / Create New Tree
+          </Link>
+        </div>
+      </section>
+
+      {/* ─── SECTION 9: FOOTER ─── */}
+      <footer className="border-t border-border-warm bg-bg-primary px-4 py-8">
+        <div className="mx-auto flex max-w-5xl flex-col items-center gap-4 text-center">
+          <div className="flex flex-wrap justify-center gap-4 text-sm text-earth/60">
+            <Link href="/about" className="hover:text-gold">
+              About / परिचय
+            </Link>
+            <Link href="/privacy" className="hover:text-gold">
+              Privacy / गोपनीयता
+            </Link>
+            <Link href="/contact" className="hover:text-gold">
+              Contact / संपर्क
+            </Link>
+            <Link href="/admin" className="hover:text-gold">
+              Admin
+            </Link>
+          </div>
+          <p className="text-xs text-earth/40">
+            Built with ❤️ as Seva | सेवा परमो धर्मः
+          </p>
+          <p className="text-xs text-earth/30">
+            Vansh-Vriksh.unfoldcro.in
+          </p>
+        </div>
+      </footer>
+    </div>
   );
 }
