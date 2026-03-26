@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/hooks/useTranslation";
-import { getTreeMetadata, getMembers, getUser } from "@/lib/db";
+import { getTreeMetadata, getMembers, getUser, setTreePasscode } from "@/lib/db";
 import { isDemoTreeId, DEMO_MEMBERS, DEMO_TREE } from "@/lib/demo-data";
 import FamilyTree from "@/components/tree/FamilyTree";
 import UltraLightTree from "@/components/tree/UltraLightTree";
@@ -27,6 +27,17 @@ export default function TreeViewPage() {
   const [isOwner, setIsOwner] = useState(false);
   const [selfMemberId, setSelfMemberId] = useState<string | undefined>();
 
+  // Share modal state
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [sharePasscode, setSharePasscode] = useState("");
+  const [usePasscode, setUsePasscode] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  // Passcode gate state (for public viewers)
+  const [passcodeUnlocked, setPasscodeUnlocked] = useState(false);
+  const [enteredPasscode, setEnteredPasscode] = useState("");
+  const [passcodeError, setPasscodeError] = useState(false);
+
   useEffect(() => {
     // Demo tree — load instantly, no Firestore
     if (isDemoTreeId(treeId)) {
@@ -47,6 +58,12 @@ export default function TreeViewPage() {
     if (!meta) { setLoading(false); return; }
     setTreeMeta(meta);
 
+    // Load existing passcode for share modal
+    if (meta.passcode) {
+      setSharePasscode(meta.passcode);
+      setUsePasscode(true);
+    }
+
     if (user) {
       const profile = await getUser(user.uid);
       if (profile?.treeId === treeId) {
@@ -57,16 +74,54 @@ export default function TreeViewPage() {
           (m) => m.relation === "self" || m.relationGroup === "self" && m.generationLevel === 0
         );
         if (selfMember) setSelfMemberId(selfMember.id);
+        // Owner bypasses passcode
+        setPasscodeUnlocked(true);
       }
     }
     setLoading(false);
   };
 
-  const shareMessage = treeMeta
-    ? encodeURIComponent(
-        `🌳 ${treeMeta.familySurname} परिवार का वंश वृक्ष देखें!\nhttps://vansh-vriksh.unfoldcro.in/tree/${treeMeta.treeId}`
-      )
-    : "";
+  const treeUrl = `https://vansh-vriksh.unfoldcro.in/tree/${treeMeta?.treeId || treeId}`;
+
+  const buildShareMessage = () => {
+    if (!treeMeta) return "";
+    let msg = `🌳 ${treeMeta.familySurname} ${t("share.shareMessage").replace("{family}", treeMeta.familySurname)}\n${treeUrl}`;
+    if (usePasscode && sharePasscode.length === 4) {
+      msg += `\n\n🔒 Passcode: ${sharePasscode}`;
+    }
+    return msg;
+  };
+
+  const handleShare = async () => {
+    if (!treeMeta) return;
+    // Save passcode to Firestore
+    if (!isDemoTreeId(treeId)) {
+      await setTreePasscode(treeId, usePasscode && sharePasscode.length === 4 ? sharePasscode : null);
+    }
+    const msg = buildShareMessage();
+    const waUrl = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    window.open(waUrl, "_blank");
+    setShowShareModal(false);
+  };
+
+  const handleCopyLink = async () => {
+    let text = treeUrl;
+    if (usePasscode && sharePasscode.length === 4) {
+      text += `\n🔒 Passcode: ${sharePasscode}`;
+    }
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handlePasscodeSubmit = () => {
+    if (enteredPasscode === treeMeta?.passcode) {
+      setPasscodeUnlocked(true);
+      setPasscodeError(false);
+    } else {
+      setPasscodeError(true);
+    }
+  };
 
   if (loading) {
     return (
@@ -80,16 +135,66 @@ export default function TreeViewPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-bg-primary px-4">
         <p className="text-2xl">🌳</p>
-        <p className="mt-2 text-earth/60">यह वृक्ष नहीं मिला / Tree not found</p>
+        <p className="mt-2 text-earth/60">{t("common.error")}</p>
         <Link href="/search" className="btn-primary mt-4">
-          खोजें / Search
+          {t("common.search")}
         </Link>
       </div>
     );
   }
 
+  // ─── PASSCODE GATE (for public viewers when tree has passcode) ───
+  if (!user && treeMeta.passcode && !passcodeUnlocked) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-bg-primary px-4">
+        <div className="w-full max-w-sm">
+          <div className="card p-6 text-center">
+            <span className="material-symbols-rounded text-accent" style={{ fontSize: "48px" }}>lock</span>
+            <h1 className="mt-3 font-heading text-xl font-bold text-earth">
+              {treeMeta.familySurname} {t("stats.families") === "परिवार" ? "परिवार" : "Family"}
+            </h1>
+            <p className="mt-2 text-sm text-earth/50">{t("share.enterPasscodeDesc")}</p>
+
+            <div className="mt-6">
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={4}
+                value={enteredPasscode}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "").slice(0, 4);
+                  setEnteredPasscode(val);
+                  setPasscodeError(false);
+                }}
+                onKeyDown={(e) => e.key === "Enter" && enteredPasscode.length === 4 && handlePasscodeSubmit()}
+                placeholder="● ● ● ●"
+                className="input-field text-center text-2xl tracking-[0.5em] font-mono"
+              />
+              {passcodeError && (
+                <p className="mt-2 text-sm text-error">{t("share.wrongPasscode")}</p>
+              )}
+            </div>
+
+            <button
+              onClick={handlePasscodeSubmit}
+              disabled={enteredPasscode.length !== 4}
+              className="btn-primary mt-4 w-full"
+            >
+              {t("share.unlock")}
+            </button>
+          </div>
+
+          <div className="mt-4 text-center">
+            <Link href="/" className="text-xs text-dark/30 hover:text-accent">
+              Vansh-Vriksh.unfoldcro.in
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ─── PUBLIC/SHARED VIEW (non-logged-in users) ───
-  // Clean, minimal — just the tree with a small header
   if (!user) {
     return (
       <div className="min-h-screen bg-bg-primary">
@@ -207,14 +312,95 @@ export default function TreeViewPage() {
 
       {/* Share FAB (for owners) */}
       {isOwner && (
-        <a
-          href={`https://wa.me/?text=${shareMessage}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="fixed bottom-6 right-6 flex h-14 w-14 items-center justify-center rounded-full bg-green-seva text-2xl text-white shadow-lg"
+        <button
+          onClick={() => setShowShareModal(true)}
+          className="fixed bottom-6 right-6 flex h-14 w-14 items-center justify-center rounded-full bg-green-seva text-white shadow-lg transition-transform hover:scale-105"
         >
-          📤
-        </a>
+          <span className="material-symbols-rounded" style={{ fontSize: "28px" }}>share</span>
+        </button>
+      )}
+
+      {/* Share Modal */}
+      {showShareModal && (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center">
+          <div className="absolute inset-0 bg-dark/50 backdrop-blur-sm" onClick={() => setShowShareModal(false)} />
+          <div className="relative w-full max-w-md animate-fade-in-up rounded-t-2xl bg-bg-card p-6 shadow-xl sm:rounded-2xl sm:m-4">
+            {/* Close */}
+            <button
+              onClick={() => setShowShareModal(false)}
+              className="absolute right-4 top-4 text-dark/30 hover:text-dark"
+            >
+              <span className="material-symbols-rounded" style={{ fontSize: "20px" }}>close</span>
+            </button>
+
+            <h2 className="font-heading text-lg font-bold text-earth">{t("share.shareTree")}</h2>
+            <p className="mt-1 text-xs text-earth/50">
+              {treeMeta.familySurname} {t("stats.families") === "परिवार" ? "परिवार" : "Family"} — {treeMeta.gotra}
+            </p>
+
+            {/* Passcode Toggle */}
+            <div className="mt-5 rounded-card border border-border-warm bg-bg-muted p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-earth">{t("share.passcodeTitle")}</p>
+                  <p className="text-xs text-earth/40">{t("share.passcodeDesc")}</p>
+                </div>
+                <button
+                  onClick={() => setUsePasscode(!usePasscode)}
+                  className={`relative h-6 w-11 rounded-full transition-colors ${
+                    usePasscode ? "bg-accent" : "bg-dark/20"
+                  }`}
+                >
+                  <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                    usePasscode ? "translate-x-5" : "translate-x-0.5"
+                  }`} />
+                </button>
+              </div>
+
+              {usePasscode && (
+                <div className="mt-3">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={4}
+                    value={sharePasscode}
+                    onChange={(e) => setSharePasscode(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                    placeholder={t("share.passcodePlaceholder")}
+                    className="input-field text-center text-xl tracking-[0.5em] font-mono"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Preview message */}
+            <div className="mt-4 rounded-card border border-border-warm bg-white/50 p-3">
+              <p className="text-xs text-dark/30 mb-1">Preview:</p>
+              <p className="text-sm text-earth whitespace-pre-line">{buildShareMessage()}</p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-4 flex flex-col gap-2">
+              <button
+                onClick={handleShare}
+                disabled={usePasscode && sharePasscode.length !== 4}
+                className="btn-primary flex w-full items-center justify-center gap-2 bg-green-seva hover:bg-green-seva/90"
+              >
+                <span className="material-symbols-rounded" style={{ fontSize: "20px" }}>send</span>
+                {t("share.shareOnWhatsApp")}
+              </button>
+
+              <button
+                onClick={handleCopyLink}
+                className="flex w-full items-center justify-center gap-2 rounded-btn border border-border-warm px-4 py-2.5 text-sm font-medium text-dark/60 transition-colors hover:bg-bg-muted"
+              >
+                <span className="material-symbols-rounded" style={{ fontSize: "18px" }}>
+                  {copied ? "check" : "content_copy"}
+                </span>
+                {copied ? t("share.copied") : t("dashboard.copy")}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DM_Sans, Poppins, Noto_Sans_Devanagari } from "next/font/google";
+import { TranslationProvider } from "@/contexts/TranslationContext";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -55,8 +56,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="hi">
+    <html lang="hi" className="notranslate" translate="no">
       <head>
+        <meta name="google" content="notranslate" />
         <link
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
@@ -65,7 +67,9 @@ export default function RootLayout({
       <body
         className={`${dmSans.variable} ${poppins.variable} ${notoSansDevanagari.variable} font-body antialiased`}
       >
-        {children}
+        <TranslationProvider>
+          {children}
+        </TranslationProvider>
       </body>
     </html>
   );

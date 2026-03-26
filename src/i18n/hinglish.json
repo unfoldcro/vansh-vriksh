@@ -456,6 +456,22 @@
     "enterDemo": "Demo Mein Jao",
     "orSeparator": "ya neeche email se sign up karo"
   },
+  "share": {
+    "shareTree": "Tree Share Karo",
+    "shareOnWhatsApp": "WhatsApp pe Bhejo",
+    "shareMessage": "{family} family ka vansh vriksh dekho!",
+    "passcodeTitle": "Passcode Set Karo (Optional)",
+    "passcodeDesc": "Security ke liye 4-digit passcode set karo. Sirf passcode wale log tree dekh payenge.",
+    "passcodeLabel": "4-digit Passcode",
+    "passcodePlaceholder": "e.g. 1234",
+    "withPasscode": "Passcode ke saath bhejo",
+    "withoutPasscode": "Bina passcode bhejo",
+    "enterPasscode": "Passcode Daalo",
+    "enterPasscodeDesc": "Ye tree protected hai. Dekhne ke liye 4-digit passcode daalo.",
+    "wrongPasscode": "Galat passcode. Dobara try karo.",
+    "unlock": "Kholo",
+    "copied": "Copy ho gaya!"
+  },
   "delete": {
     "confirmTitle": "Kya aap sure ho?",
     "confirmMessage": "30 din tak recover kar sakte ho.",

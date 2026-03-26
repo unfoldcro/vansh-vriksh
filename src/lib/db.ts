@@ -228,3 +228,10 @@ export async function getTreeMetadata(treeId: string): Promise<TreeMetadata | nu
   const snap = await getDoc(doc(db, "tree-metadata", treeId));
   return snap.exists() ? (snap.data() as TreeMetadata) : null;
 }
+
+// ─── Tree Passcode ───
+export async function setTreePasscode(treeId: string, passcode: string | null) {
+  await updateDoc(doc(db, "tree-metadata", treeId), {
+    passcode: passcode || null,
+  });
+}

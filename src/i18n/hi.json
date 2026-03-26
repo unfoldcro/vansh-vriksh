@@ -457,6 +457,22 @@
     "enterDemo": "डेमो में जाएं",
     "orSeparator": "या नीचे ईमेल से साइन अप करें"
   },
+  "share": {
+    "shareTree": "वृक्ष शेयर करें",
+    "shareOnWhatsApp": "WhatsApp पर भेजें",
+    "shareMessage": "{family} परिवार का वंश वृक्ष देखें!",
+    "passcodeTitle": "पासकोड सेट करें (वैकल्पिक)",
+    "passcodeDesc": "सुरक्षा के लिए 4 अंकों का पासकोड सेट करें। सिर्फ पासकोड वाले लोग ही वृक्ष देख सकेंगे।",
+    "passcodeLabel": "4 अंकों का पासकोड",
+    "passcodePlaceholder": "जैसे 1234",
+    "withPasscode": "पासकोड के साथ भेजें",
+    "withoutPasscode": "बिना पासकोड भेजें",
+    "enterPasscode": "पासकोड डालें",
+    "enterPasscodeDesc": "यह वृक्ष सुरक्षित है। देखने के लिए 4 अंकों का पासकोड डालें।",
+    "wrongPasscode": "गलत पासकोड। कृपया दोबारा कोशिश करें।",
+    "unlock": "खोलें",
+    "copied": "कॉपी हो गया!"
+  },
   "delete": {
     "confirmTitle": "क्या आप पक्के हैं?",
     "confirmMessage": "30 दिन तक रिकवर कर सकते हैं।",

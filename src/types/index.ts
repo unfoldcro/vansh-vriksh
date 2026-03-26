@@ -117,6 +117,7 @@ export interface TreeMetadata {
   generations: number;
   createdAt: string;
   isPublicToSameGotra: boolean;
+  passcode?: string; // 4-digit passcode for shared tree security
   status: "active" | "deleted" | "merged";
 }
 

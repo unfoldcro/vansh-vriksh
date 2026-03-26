@@ -19,14 +19,14 @@ export interface OrgMember {
   dob?: string;
   occupation?: string;
   deathYear?: number;
-  spouseOf?: string; // id of spouse to draw marriage lines
+  spouseOf?: string;
 }
 
 interface OrgChartTreeProps {
   members: OrgMember[];
-  focusedMemberId?: string; // logged-in user's member id
+  focusedMemberId?: string;
   onMemberTap?: (member: OrgMember) => void;
-  isDemo?: boolean; // landing page demo mode
+  isDemo?: boolean;
   className?: string;
 }
 
@@ -41,6 +41,15 @@ const GEN_LABELS: Record<number, { hi: string; en: string }> = {
   [2]: { hi: "पोता-पोती", en: "Grandchildren" },
   [3]: { hi: "परपोता-परपोती", en: "Great-Grandchildren" },
 };
+
+/* ──────────────────────── Gender dot color ───────────────────────── */
+
+function genderDotClass(gender: string, alive: boolean) {
+  if (!alive) return "bg-dark/25";
+  if (gender === "male") return "bg-blue-500";
+  if (gender === "female") return "bg-pink-500";
+  return "bg-emerald-500";
+}
 
 /* ────────────────────────── Member Card ──────────────────────────── */
 
@@ -58,73 +67,72 @@ function MemberNode({
   onTap: () => void;
 }) {
   const isDeceased = member.deceased || member.alive === false;
-  const bgColor = isDeceased
-    ? "bg-card-deceased/50"
-    : member.gender === "male"
-      ? "bg-card-male"
-      : member.gender === "female"
-        ? "bg-card-female"
-        : "bg-card-other";
 
   return (
     <button
       onClick={onTap}
       data-member-id={member.id}
       className={`
-        group relative w-[160px] shrink-0 rounded-card border-2 p-3 text-left
-        transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5
-        ${bgColor}
+        group relative w-[152px] shrink-0 rounded-xl bg-white p-3 text-left
+        transition-all duration-200 hover:shadow-md hover:-translate-y-0.5
+        border
         ${isFocused
           ? "border-accent ring-2 ring-accent/30 shadow-lg shadow-accent/10"
           : isHighlighted
             ? "border-accent/50 ring-1 ring-accent/20"
-            : "border-border-warm"
+            : isDeceased
+              ? "border-dark/10"
+              : "border-border-warm"
         }
-        ${isExpanded ? "shadow-md" : ""}
+        ${isDeceased ? "opacity-75" : ""}
+        ${isExpanded ? "shadow-md" : "shadow-sm"}
       `}
     >
-      {/* Badges row */}
-      <div className="flex items-center gap-1">
+      {/* Top row: gender dot + badges */}
+      <div className="flex items-center gap-1.5">
+        {/* Gender dot */}
+        <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${genderDotClass(member.gender, !isDeceased)}`} />
+
         {isDeceased && (
-          <span className="material-symbols-rounded text-dark/40" style={{ fontSize: "14px" }}>
+          <span className="material-symbols-rounded text-dark/30" style={{ fontSize: "13px" }}>
             spa
           </span>
         )}
         {member.relationType === "adopted" && (
-          <span className="rounded bg-accent/20 px-1 text-[9px] font-bold text-accent">दत्तक</span>
+          <span className="rounded bg-accent/15 px-1 text-[8px] font-bold text-accent">दत्तक</span>
         )}
         {member.relationType === "step" && (
-          <span className="rounded bg-warning/20 px-1 text-[9px] font-bold text-warning">सौतेला</span>
+          <span className="rounded bg-warning/15 px-1 text-[8px] font-bold text-warning">सौतेला</span>
         )}
         {isFocused && (
-          <span className="ml-auto rounded-full bg-accent px-1.5 text-[8px] font-bold text-white">YOU</span>
+          <span className="ml-auto rounded-full bg-accent px-1.5 py-0.5 text-[7px] font-bold text-white leading-none">YOU</span>
         )}
       </div>
 
       {/* Name */}
-      <p className="mt-1 truncate text-sm font-bold text-dark">
+      <p className={`mt-1.5 truncate text-[13px] font-bold leading-tight ${isDeceased ? "text-dark/50" : "text-dark"}`}>
         {member.nameHi || member.name}
       </p>
-      <p className="truncate text-[11px] text-dark/50">
+      <p className="truncate text-[10px] leading-tight text-dark/40">
         {member.nameHi ? member.name : ""}
       </p>
 
       {/* Née tag */}
       {member.nee && (
-        <p className="truncate text-[10px] italic text-dark/40">née {member.nee}</p>
+        <p className="truncate text-[9px] italic text-dark/30">née {member.nee}</p>
       )}
 
       {/* Relation */}
-      <p className="mt-1 text-[11px] font-semibold text-accent">
+      <p className="mt-1 text-[10px] font-semibold text-accent">
         {member.relationHi || member.relation}
       </p>
 
       {/* Expanded details */}
       {isExpanded && (
-        <div className="mt-2 space-y-0.5 border-t border-dark/10 pt-2 text-[10px] text-dark/50">
+        <div className="mt-2 space-y-0.5 border-t border-dark/5 pt-2 text-[9px] text-dark/40">
           {isDeceased ? (
             <p className="flex items-center gap-1">
-              <span className="material-symbols-rounded" style={{ fontSize: "12px" }}>spa</span>
+              <span className="material-symbols-rounded" style={{ fontSize: "11px" }}>spa</span>
               स्वर्गवासी {member.deathYear ? `(${member.deathYear})` : ""}
             </p>
           ) : (
@@ -151,27 +159,85 @@ function CollapsedRow({
 }) {
   const label = GEN_LABELS[gen];
   return (
-    <div className="relative flex flex-col items-center py-2">
-      {/* Connector line in */}
-      <div className="h-4 w-px bg-accent/30" />
+    <div className="relative flex flex-col items-center py-1">
+      {/* Branch in */}
+      <div className="h-5 w-0.5 rounded-full bg-amber-800/20" />
 
       <button
         onClick={onExpand}
-        className="flex items-center gap-2 rounded-full border border-dashed border-accent/40 bg-accent/5 px-4 py-2 text-xs transition-all hover:bg-accent/10 hover:border-accent"
+        className="flex items-center gap-2 rounded-full border border-dashed border-amber-800/25 bg-amber-50 px-4 py-1.5 text-xs transition-all hover:bg-amber-100 hover:border-amber-800/40"
       >
-        <span className="material-symbols-rounded text-accent" style={{ fontSize: "16px" }}>
+        <span className="material-symbols-rounded text-amber-800/60" style={{ fontSize: "14px" }}>
           expand_more
         </span>
-        <span className="text-dark/60">
+        <span className="text-amber-900/60 font-medium">
           {label ? label.hi : `Gen ${gen}`}
         </span>
-        <span className="rounded-full bg-accent/20 px-1.5 text-[10px] font-bold text-accent">
+        <span className="rounded-full bg-amber-800/10 px-1.5 text-[10px] font-bold text-amber-800/60">
           {count}
         </span>
       </button>
 
-      {/* Connector line out */}
-      <div className="h-4 w-px bg-accent/30" />
+      {/* Branch out */}
+      <div className="h-5 w-0.5 rounded-full bg-amber-800/20" />
+    </div>
+  );
+}
+
+/* ─────────────────── Tree Branch Connectors (SVG) ────────────────── */
+
+function BranchConnector({ memberCount }: { memberCount: number }) {
+  if (memberCount <= 1) return null;
+
+  // Calculate width of the horizontal span
+  const cardWidth = 152;
+  const gap = 12;
+  const totalWidth = (memberCount - 1) * (cardWidth + gap);
+  const svgWidth = totalWidth + 4;
+  const mid = svgWidth / 2;
+
+  return (
+    <div className="relative flex justify-center" style={{ height: 28 }}>
+      <svg
+        width={svgWidth}
+        height={28}
+        viewBox={`0 0 ${svgWidth} 28`}
+        fill="none"
+        className="overflow-visible"
+      >
+        {/* Trunk coming down from center */}
+        <line x1={mid} y1={0} x2={mid} y2={10} stroke="#92400e" strokeWidth={2.5} strokeOpacity={0.2} strokeLinecap="round" />
+
+        {/* Horizontal branch */}
+        <line x1={2} y1={10} x2={svgWidth - 2} y2={10} stroke="#92400e" strokeWidth={2} strokeOpacity={0.15} strokeLinecap="round" />
+
+        {/* Vertical drops to each member */}
+        {Array.from({ length: memberCount }, (_, i) => {
+          const x = (cardWidth + gap) / 2 + i * (cardWidth + gap);
+          return (
+            <line
+              key={i}
+              x1={x}
+              y1={10}
+              x2={x}
+              y2={28}
+              stroke="#92400e"
+              strokeWidth={2}
+              strokeOpacity={0.15}
+              strokeLinecap="round"
+            />
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+/* Single trunk line between generations */
+function TrunkLine() {
+  return (
+    <div className="flex justify-center">
+      <div className="h-7 w-0.5 rounded-full bg-amber-800/20" />
     </div>
   );
 }
@@ -191,7 +257,6 @@ export default function OrgChartTree({
   const scrollRef = useRef<HTMLDivElement>(null);
   const focusedRef = useRef<HTMLDivElement>(null);
 
-  // Determine focused member generation
   const focusedMember = members.find((m) => m.id === focusedMemberId);
   const focusedGen = focusedMember?.gen ?? 0;
 
@@ -205,12 +270,11 @@ export default function OrgChartTree({
     return Array.from(genMap.entries()).sort(([a], [b]) => a - b);
   }, [members]);
 
-  // Auto-collapse generations outside focus range
+  // Auto-collapse distant generations
   useEffect(() => {
     if (!focusedMemberId || isDemo) return;
     const toCollapse = new Set<number>();
     for (const [gen] of generations) {
-      // Show: 1 above, self, 2 below
       if (gen < focusedGen - 1 || gen > focusedGen + 2) {
         toCollapse.add(gen);
       }
@@ -218,14 +282,14 @@ export default function OrgChartTree({
     setCollapsedGens(toCollapse);
   }, [focusedMemberId, focusedGen, generations, isDemo]);
 
-  // Scroll to focused member on mount
+  // Scroll to focused member
   useEffect(() => {
     if (focusedRef.current) {
       focusedRef.current.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
     }
   }, [focusedMemberId]);
 
-  // Search filter
+  // Search
   const searchMatches = useMemo(() => {
     if (!searchQuery.trim()) return new Set<string>();
     const q = searchQuery.toLowerCase();
@@ -242,15 +306,12 @@ export default function OrgChartTree({
     );
   }, [searchQuery, members]);
 
-  // When search finds results, expand those generations
   useEffect(() => {
     if (searchMatches.size > 0) {
       setCollapsedGens((prev) => {
         const next = new Set(prev);
         for (const m of members) {
-          if (searchMatches.has(m.id)) {
-            next.delete(m.gen);
-          }
+          if (searchMatches.has(m.id)) next.delete(m.gen);
         }
         return next;
       });
@@ -285,7 +346,7 @@ export default function OrgChartTree({
   }
 
   return (
-    <div className={`flex flex-col gap-4 ${className}`}>
+    <div className={`flex flex-col gap-3 ${className}`}>
       {/* Search bar */}
       {!isDemo && (
         <div className="relative mx-auto w-full max-w-sm">
@@ -310,7 +371,6 @@ export default function OrgChartTree({
         </div>
       )}
 
-      {/* Search results count */}
       {searchQuery && (
         <p className="text-center text-xs text-dark/40">
           {searchMatches.size} result{searchMatches.size !== 1 ? "s" : ""} found
@@ -318,8 +378,8 @@ export default function OrgChartTree({
       )}
 
       {/* Tree container */}
-      <div ref={scrollRef} className="overflow-x-auto pb-6">
-        <div className="flex min-w-fit flex-col items-center gap-0 px-8">
+      <div ref={scrollRef} className="overflow-x-auto pb-4">
+        <div className="flex min-w-fit flex-col items-center px-6">
           {generations.map(([gen, genMembers], genIndex) => {
             const isCollapsed = collapsedGens.has(gen);
             const label = GEN_LABELS[gen];
@@ -339,42 +399,31 @@ export default function OrgChartTree({
 
             return (
               <div key={gen} className="flex flex-col items-center">
-                {/* Vertical connector from previous generation */}
-                {!isFirstGen && (
-                  <div className="h-6 w-px bg-accent/30" />
-                )}
+                {/* Trunk from previous generation */}
+                {!isFirstGen && <TrunkLine />}
 
-                {/* Generation label */}
+                {/* Generation label pill */}
                 <button
                   onClick={() => toggleGenCollapse(gen)}
-                  className="mb-3 flex items-center gap-2 rounded-full bg-accent/10 px-4 py-1.5 transition-all hover:bg-accent/20"
+                  className="mb-2 flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-800/10 px-3 py-1 transition-all hover:bg-amber-100"
                 >
-                  <span className="text-xs font-bold text-accent">
+                  <span className="text-[11px] font-bold text-amber-900/70">
                     {label ? label.hi : `Gen ${gen}`}
                   </span>
-                  <span className="text-[10px] text-dark/30">
-                    ({genMembers.length})
+                  <span className="text-[9px] text-amber-800/30">
+                    {genMembers.length}
                   </span>
                   {!isDemo && (
-                    <span className="material-symbols-rounded text-accent/50" style={{ fontSize: "14px" }}>
+                    <span className="material-symbols-rounded text-amber-800/30" style={{ fontSize: "12px" }}>
                       unfold_less
                     </span>
                   )}
                 </button>
 
-                {/* Horizontal line spanning all members */}
-                {genMembers.length > 1 && (
-                  <div className="relative mb-2 flex w-full justify-center">
-                    <div
-                      className="h-px bg-accent/20"
-                      style={{
-                        width: `${Math.max((genMembers.length - 1) * 172, 100)}px`,
-                      }}
-                    />
-                  </div>
-                )}
+                {/* Branch connector (SVG) */}
+                <BranchConnector memberCount={genMembers.length} />
 
-                {/* Member cards row */}
+                {/* Member cards */}
                 <div
                   ref={genMembers.some((m) => m.id === focusedMemberId) ? focusedRef : undefined}
                   className="flex items-start justify-center gap-3"
@@ -385,30 +434,24 @@ export default function OrgChartTree({
                     const isExpanded = expandedMembers.has(member.id);
 
                     return (
-                      <div key={member.id} className="flex flex-col items-center">
-                        {/* Vertical connector down from horizontal line */}
-                        {genMembers.length > 1 && (
-                          <div className="h-2 w-px bg-accent/20" />
-                        )}
-
-                        <MemberNode
-                          member={member}
-                          isFocused={isFocused}
-                          isHighlighted={isHighlighted}
-                          isExpanded={isExpanded}
-                          onTap={() => {
-                            toggleMemberExpand(member.id);
-                            onMemberTap?.(member);
-                          }}
-                        />
-                      </div>
+                      <MemberNode
+                        key={member.id}
+                        member={member}
+                        isFocused={isFocused}
+                        isHighlighted={isHighlighted}
+                        isExpanded={isExpanded}
+                        onTap={() => {
+                          toggleMemberExpand(member.id);
+                          onMemberTap?.(member);
+                        }}
+                      />
                     );
                   })}
                 </div>
 
-                {/* Vertical connector to next generation */}
+                {/* Trunk to next generation */}
                 {!isLastGen && !collapsedGens.has(generations[genIndex + 1]?.[0]) && (
-                  <div className="h-6 w-px bg-accent/30" />
+                  <TrunkLine />
                 )}
               </div>
             );
@@ -416,20 +459,20 @@ export default function OrgChartTree({
         </div>
       </div>
 
-      {/* Legend (non-demo) */}
+      {/* Legend */}
       {!isDemo && (
-        <div className="mx-auto flex flex-wrap items-center justify-center gap-3 text-[10px] text-dark/40">
-          <span className="flex items-center gap-1">
-            <span className="h-3 w-3 rounded border border-border-warm bg-card-male" /> Male
+        <div className="mx-auto flex flex-wrap items-center justify-center gap-4 text-[10px] text-dark/40">
+          <span className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-blue-500" /> Male
           </span>
-          <span className="flex items-center gap-1">
-            <span className="h-3 w-3 rounded border border-border-warm bg-card-female" /> Female
+          <span className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-pink-500" /> Female
           </span>
-          <span className="flex items-center gap-1">
-            <span className="h-3 w-3 rounded border border-border-warm bg-card-deceased/50" /> Deceased
+          <span className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-dark/25" /> Deceased
           </span>
-          <span className="flex items-center gap-1">
-            <span className="h-3 w-3 rounded-sm border-2 border-accent bg-accent/10" /> You
+          <span className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full ring-2 ring-accent bg-accent/20" /> You
           </span>
         </div>
       )}

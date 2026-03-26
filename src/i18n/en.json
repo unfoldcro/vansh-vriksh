@@ -457,6 +457,22 @@
     "enterDemo": "Enter Demo",
     "orSeparator": "or sign up with email below"
   },
+  "share": {
+    "shareTree": "Share Tree",
+    "shareOnWhatsApp": "Share on WhatsApp",
+    "shareMessage": "See {family} family tree on Vansh Vriksh!",
+    "passcodeTitle": "Set Passcode (Optional)",
+    "passcodeDesc": "Set a 4-digit passcode for extra security. Only people with the passcode can view the tree.",
+    "passcodeLabel": "4-digit Passcode",
+    "passcodePlaceholder": "e.g. 1234",
+    "withPasscode": "Share with Passcode",
+    "withoutPasscode": "Share without Passcode",
+    "enterPasscode": "Enter Passcode",
+    "enterPasscodeDesc": "This tree is protected. Enter the 4-digit passcode to view.",
+    "wrongPasscode": "Wrong passcode. Please try again.",
+    "unlock": "Unlock",
+    "copied": "Copied!"
+  },
   "delete": {
     "confirmTitle": "Are you sure?",
     "confirmMessage": "You can recover within 30 days.",
