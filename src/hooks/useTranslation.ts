@@ -3,10 +3,11 @@
 import { useState, useEffect, useCallback } from "react";
 import hi from "@/i18n/hi.json";
 import en from "@/i18n/en.json";
+import hinglish from "@/i18n/hinglish.json";
 
-type Lang = "hi" | "en";
+type Lang = "hi" | "en" | "hinglish";
 
-const translations: Record<Lang, Record<string, unknown>> = { hi, en };
+const translations: Record<Lang, Record<string, unknown>> = { hi, en, hinglish };
 
 function getNestedValue(obj: Record<string, unknown>, path: string): string {
   const keys = path.split(".");
@@ -26,7 +27,7 @@ export function useTranslation() {
 
   useEffect(() => {
     const stored = localStorage.getItem("vansh-vriksh-lang") as Lang | null;
-    if (stored && (stored === "hi" || stored === "en")) {
+    if (stored && (stored === "hi" || stored === "en" || stored === "hinglish")) {
       setLangState(stored);
     }
   }, []);
@@ -43,9 +44,5 @@ export function useTranslation() {
     [lang]
   );
 
-  const toggleLang = useCallback(() => {
-    setLang(lang === "hi" ? "en" : "hi");
-  }, [lang, setLang]);
-
-  return { t, lang, setLang, toggleLang };
+  return { t, lang, setLang };
 }

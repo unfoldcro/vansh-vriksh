@@ -4,8 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
-import { db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
 import {
   getAllUsers,
   getAllTrees,
@@ -38,18 +36,16 @@ export default function AdminPage() {
       router.push("/verify");
       return;
     }
-    if (user) checkAdmin(user.uid);
+    if (user) checkAdmin();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading, router]);
 
-  const checkAdmin = async (uid: string) => {
-    const adminDoc = await getDoc(doc(db, "admins", uid));
-    if (!adminDoc.exists()) {
-      const adminUids = process.env.NEXT_PUBLIC_ADMIN_UIDS?.split(",") || [];
-      if (!adminUids.includes(uid)) {
-        router.push("/dashboard");
-        return;
-      }
+  const checkAdmin = async () => {
+    // Only unfoldcro@gmail.com is admin — permanent, no env vars needed
+    const ADMIN_EMAIL = "unfoldcro@gmail.com";
+    if (user?.email !== ADMIN_EMAIL) {
+      router.push("/dashboard");
+      return;
     }
     setIsAdmin(true);
     setLoading(false);

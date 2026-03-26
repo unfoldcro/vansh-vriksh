@@ -23,6 +23,17 @@ body {
   background: var(--color-bg-primary);
 }
 
+/* Material Symbols base */
+.material-symbols-rounded {
+  font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+  font-size: 20px;
+  line-height: 1;
+  vertical-align: middle;
+}
+.icon-sm { font-size: 18px; }
+.icon-lg { font-size: 24px; }
+.icon-xl { font-size: 32px; }
+
 /* Hindi text needs more vertical breathing room */
 [lang="hi"] body,
 .font-hindi {

@@ -21,6 +21,7 @@ export default function TreeViewPage() {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("tree");
   const [isOwner, setIsOwner] = useState(false);
+  const [selfMemberId, setSelfMemberId] = useState<string | undefined>();
 
   useEffect(() => {
     loadTree();
@@ -38,6 +39,11 @@ export default function TreeViewPage() {
         setIsOwner(profile.role === "owner");
         const memberList = await getMembers(user.uid);
         setMembers(memberList);
+        // Find the self member for tree focus
+        const selfMember = memberList.find(
+          (m) => m.relation === "self" || m.relationGroup === "self" && m.generationLevel === 0
+        );
+        if (selfMember) setSelfMemberId(selfMember.id);
       }
     }
     setLoading(false);
@@ -95,19 +101,20 @@ export default function TreeViewPage() {
       <div className="border-b border-border-warm bg-bg-card px-4 py-2">
         <div className="mx-auto flex max-w-4xl gap-1">
           {([
-            { key: "tree" as ViewMode, label: "🌳 वृक्ष / Tree" },
-            { key: "ultralight" as ViewMode, label: "📝 हल्का / Light" },
-            { key: "shraddh" as ViewMode, label: "🙏 श्राद्ध / Shraddh" },
+            { key: "tree" as ViewMode, icon: "account_tree", label: "वृक्ष / Tree" },
+            { key: "ultralight" as ViewMode, icon: "format_list_bulleted", label: "हल्का / Light" },
+            { key: "shraddh" as ViewMode, icon: "self_improvement", label: "श्राद्ध / Shraddh" },
           ]).map((v) => (
             <button
               key={v.key}
               onClick={() => setViewMode(v.key)}
-              className={`rounded-btn px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`flex items-center gap-1.5 rounded-btn px-3 py-1.5 text-xs font-medium transition-colors ${
                 viewMode === v.key
                   ? "bg-accent text-white"
                   : "text-dark/50 hover:bg-bg-muted"
               }`}
             >
+              <span className="material-symbols-rounded" style={{ fontSize: "16px" }}>{v.icon}</span>
               {v.label}
             </button>
           ))}
@@ -118,7 +125,7 @@ export default function TreeViewPage() {
       <div className="mx-auto max-w-4xl px-4 py-6">
         {members.length > 0 ? (
           <>
-            {viewMode === "tree" && <FamilyTree members={members} />}
+            {viewMode === "tree" && <FamilyTree members={members} focusedMemberId={selfMemberId} />}
             {viewMode === "ultralight" && <UltraLightTree members={members} />}
             {viewMode === "shraddh" && <ShraddhView members={members} />}
           </>

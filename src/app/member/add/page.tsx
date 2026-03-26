@@ -4,9 +4,11 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "@/hooks/useTranslation";
 import { addMember } from "@/lib/db";
 import { RELATION_GROUPS, RELATIONS, getRelationConfig } from "@/lib/relations";
 import { DOB_DECADES, DOB_MARKERS, GOTRAS, TEERTH_STHALS } from "@/lib/data";
+import TransliterateInput from "@/components/ui/TransliterateInput";
 import type { DobType, Gender, Member } from "@/types";
 
 type FormStep = "relation" | "details" | "marriage" | "confirm";
@@ -14,6 +16,7 @@ type FormStep = "relation" | "details" | "marriage" | "confirm";
 export default function AddMemberPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  const { t, lang } = useTranslation();
   const [step, setStep] = useState<FormStep>("relation");
   const [saving, setSaving] = useState(false);
 
@@ -53,12 +56,17 @@ export default function AddMemberPage() {
 
   const relationConfig = getRelationConfig(selectedRelation);
   const isSpouseRelation = relationConfig?.triggersMarriage || false;
+  const isHindiMode = lang === "hi" || lang === "hinglish";
+
+  // Primary/secondary name based on language
+  const primaryName = isHindiMode ? nameHi : name;
+  const secondaryName = isHindiMode ? name : nameHi;
+  const setPrimaryName = (val: string) => { if (isHindiMode) setNameHi(val); else setName(val); };
+  const setSecondaryName = (val: string) => { if (isHindiMode) setName(val); else setNameHi(val); };
 
   // Auto-set gender from relation config
   useEffect(() => {
-    if (relationConfig) {
-      setGender(relationConfig.gender);
-    }
+    if (relationConfig) setGender(relationConfig.gender);
   }, [relationConfig]);
 
   const getDob = () => {
@@ -83,7 +91,7 @@ export default function AddMemberPage() {
 
     try {
       const memberData: Partial<Member> = {
-        name,
+        name: name || nameHi,
         nameHi: nameHi || undefined,
         alsoKnownAs: alsoKnownAs || undefined,
         relation: selectedRelation,
@@ -104,18 +112,31 @@ export default function AddMemberPage() {
       };
 
       await addMember(user.uid, memberData);
-
-      // TODO: If spouse relation, also save marriage document
       router.push("/dashboard");
     } catch {
       setSaving(false);
     }
   };
 
+  // Get relation label based on language
+  const getRelLabel = (rel: { labelHi: string; labelEn: string }) => {
+    if (lang === "en") return rel.labelEn;
+    if (lang === "hinglish") return rel.labelEn;
+    return rel.labelHi;
+  };
+
+  const getGroupLabel = (group: { labelHi: string; labelEn: string }) => {
+    if (lang === "en") return group.labelEn;
+    return group.labelHi;
+  };
+
+  const formSteps: FormStep[] = ["relation", "details", ...(isSpouseRelation ? ["marriage" as FormStep] : []), "confirm"];
+  const stepIndex = formSteps.indexOf(step);
+
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-bg-primary">
-        <div className="text-earth/60">Loading...</div>
+        <div className="text-dark/60"><span className="loading-dot" />{t("common.loading")}</div>
       </div>
     );
   }
@@ -123,23 +144,19 @@ export default function AddMemberPage() {
   return (
     <div className="min-h-screen bg-bg-primary px-4 py-8">
       <div className="mx-auto max-w-2xl">
-        <Link href="/dashboard" className="mb-6 inline-block text-sm text-earth/50 hover:text-gold">
-          &larr; वापस / Back
+        <Link href="/dashboard" className="mb-6 inline-flex items-center gap-1 text-sm text-dark/50 hover:text-accent">
+          <span className="material-symbols-rounded" style={{ fontSize: "16px" }}>arrow_back</span>
+          {t("common.back")}
         </Link>
 
         <h1 className="font-hindi text-2xl font-bold text-earth">
-          सदस्य जोड़ें / Add Member
+          {t("member.addMember")}
         </h1>
 
         {/* Step indicator */}
         <div className="mt-4 flex gap-1">
-          {(["relation", "details", ...(isSpouseRelation ? ["marriage"] : []), "confirm"] as FormStep[]).map((s, i, arr) => (
-            <div
-              key={s}
-              className={`h-1.5 flex-1 rounded-full transition-colors ${
-                arr.indexOf(step) >= i ? "bg-gold" : "bg-border-warm"
-              }`}
-            />
+          {formSteps.map((_, i) => (
+            <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${stepIndex >= i ? "bg-accent" : "bg-border-warm"}`} />
           ))}
         </div>
 
@@ -148,30 +165,25 @@ export default function AddMemberPage() {
           {/* ─── STEP 1: Relation Selection ─── */}
           {step === "relation" && (
             <div className="space-y-4">
-              <p className="text-sm text-earth/60">
-                रिश्ता चुनें / Select Relation
-              </p>
+              <p className="text-sm text-dark/60">{t("member.selectRelation")}</p>
 
               {RELATION_GROUPS.map((group) => {
                 const relations = RELATIONS.filter((r) => r.group === group.key);
                 return (
                   <div key={group.key}>
-                    <h3 className="mb-2 text-sm font-semibold text-earth/70">
-                      {group.labelHi} / {group.labelEn}
+                    <h3 className="mb-2 text-sm font-semibold text-dark/70">
+                      {getGroupLabel(group)}
                     </h3>
                     <div className="flex flex-wrap gap-2">
                       {relations.map((rel) => (
-                        <button
-                          key={rel.key}
-                          type="button"
+                        <button key={rel.key} type="button"
                           onClick={() => setSelectedRelation(rel.key)}
                           className={`rounded-btn px-3 py-1.5 text-xs font-medium transition-colors ${
                             selectedRelation === rel.key
                               ? "bg-accent text-white"
                               : "border border-border-warm text-dark/60 hover:bg-bg-muted"
-                          }`}
-                        >
-                          {rel.labelHi} / {rel.labelEn}
+                          }`}>
+                          {getRelLabel(rel)}
                         </button>
                       ))}
                     </div>
@@ -179,12 +191,8 @@ export default function AddMemberPage() {
                 );
               })}
 
-              <button
-                onClick={() => setStep("details")}
-                disabled={!selectedRelation}
-                className="btn-primary mt-4 w-full"
-              >
-                आगे / Next &rarr;
+              <button onClick={() => setStep("details")} disabled={!selectedRelation} className="btn-primary mt-4 w-full">
+                {t("common.next")} &rarr;
               </button>
             </div>
           )}
@@ -193,71 +201,53 @@ export default function AddMemberPage() {
           {step === "details" && (
             <div className="space-y-5">
               {relationConfig && (
-                <div className="rounded-lg bg-bg-muted px-3 py-2 text-sm text-earth/60">
-                  रिश्ता: <span className="font-medium text-earth">{relationConfig.labelHi}</span> ({relationConfig.labelEn})
+                <div className="rounded-card bg-bg-muted px-3 py-2 text-sm text-dark/60">
+                  {t("member.relation")}: <span className="font-medium text-earth">{getRelLabel(relationConfig)}</span>
                   {relationConfig.relationType !== "blood" && (
                     <span className="ml-2 rounded bg-accent/20 px-1.5 text-xs text-accent">{relationConfig.relationType}</span>
                   )}
                 </div>
               )}
 
-              {/* Name */}
-              <label className="block">
+              {/* Name with auto-transliteration */}
+              <div>
                 <span className="text-sm font-medium text-earth">
-                  नाम / Name <span className="text-error">*</span>
+                  {t("member.name")} <span className="text-error">*</span>
                 </span>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Suresh Patil"
-                  className="mt-1 input-field"
+                <TransliterateInput
+                  value={primaryName}
+                  onChange={setPrimaryName}
+                  transliteratedValue={secondaryName}
+                  onTransliteratedChange={setSecondaryName}
+                  placeholder={isHindiMode ? "सुरेश पाटिल" : "Suresh Patil"}
+                  required
+                  className="mt-1"
                 />
-              </label>
-
-              {/* Hindi Name */}
-              <label className="block">
-                <span className="text-sm font-medium text-earth">हिंदी नाम / Name in Hindi</span>
-                <input
-                  type="text"
-                  value={nameHi}
-                  onChange={(e) => setNameHi(e.target.value)}
-                  placeholder="सुरेश पाटिल"
-                  className="mt-1 input-field font-hindi"
-                />
-              </label>
+              </div>
 
               {/* Also Known As */}
               <label className="block">
-                <span className="text-sm font-medium text-earth">उपनाम / Also Known As</span>
-                <input
-                  type="text"
-                  value={alsoKnownAs}
-                  onChange={(e) => setAlsoKnownAs(e.target.value)}
-                  placeholder="Babuji, Dada"
-                  className="mt-1 input-field"
-                />
+                <span className="text-sm font-medium text-earth">{t("profile.alsoKnownAs")}</span>
+                <input type="text" value={alsoKnownAs} onChange={(e) => setAlsoKnownAs(e.target.value)}
+                  placeholder="Babuji, Dada" className="mt-1 input-field" />
               </label>
 
               {/* Gender */}
               <div>
-                <span className="text-sm font-medium text-earth">लिंग / Gender</span>
+                <span className="text-sm font-medium text-earth">{t("member.gender")}</span>
                 <div className="mt-2 flex gap-3">
                   {([
-                    { key: "male" as Gender, label: "♂ पुरुष / Male", bg: "bg-card-male" },
-                    { key: "female" as Gender, label: "♀ स्त्री / Female", bg: "bg-card-female" },
-                    { key: "other" as Gender, label: "अन्य / Other", bg: "bg-card-other" },
+                    { key: "male" as Gender, label: t("member.male"), bg: "bg-card-male", icon: "person" },
+                    { key: "female" as Gender, label: t("member.female"), bg: "bg-card-female", icon: "face_3" },
+                    { key: "other" as Gender, label: t("member.other"), bg: "bg-card-other", icon: "person" },
                   ]).map((g) => (
-                    <button
-                      key={g.key}
-                      type="button"
-                      onClick={() => setGender(g.key)}
-                      className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
+                    <button key={g.key} type="button" onClick={() => setGender(g.key)}
+                      className={`flex flex-1 items-center justify-center gap-1.5 rounded-card py-2 text-sm font-medium transition-colors ${
                         gender === g.key
                           ? `${g.bg} border-2 border-accent text-dark`
-                          : "border border-border-warm text-earth/60"
-                      }`}
-                    >
+                          : "border border-border-warm text-dark/60"
+                      }`}>
+                      <span className="material-symbols-rounded" style={{ fontSize: "16px" }}>{g.icon}</span>
                       {g.label}
                     </button>
                   ))}
@@ -266,79 +256,62 @@ export default function AddMemberPage() {
 
               {/* Alive/Deceased */}
               <div>
-                <span className="text-sm font-medium text-earth">स्थिति / Status</span>
+                <span className="text-sm font-medium text-earth">{t("member.status")}</span>
                 <div className="mt-2 flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setAlive(true)}
-                    className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
-                      alive
-                        ? "bg-success/10 border-2 border-success text-success"
-                        : "border border-border-warm text-earth/60"
-                    }`}
-                  >
-                    जीवित / Living
+                  <button type="button" onClick={() => setAlive(true)}
+                    className={`flex-1 rounded-card py-2 text-sm font-medium transition-colors ${
+                      alive ? "bg-success/10 border-2 border-success text-success" : "border border-border-warm text-dark/60"
+                    }`}>
+                    {t("member.alive")}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setAlive(false)}
-                    className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
-                      !alive
-                        ? "bg-card-deceased border-2 border-earth/30 text-earth"
-                        : "border border-border-warm text-earth/60"
-                    }`}
-                  >
-                    🕊 स्वर्गवासी / Deceased
+                  <button type="button" onClick={() => setAlive(false)}
+                    className={`flex flex-1 items-center justify-center gap-1 rounded-card py-2 text-sm font-medium transition-colors ${
+                      !alive ? "bg-card-deceased border-2 border-dark/30 text-dark" : "border border-border-warm text-dark/60"
+                    }`}>
+                    <span className="material-symbols-rounded" style={{ fontSize: "16px" }}>spa</span>
+                    {t("member.deceased")}
                   </button>
                 </div>
               </div>
 
               {/* DOB */}
               <div>
-                <span className="text-sm font-medium text-earth">जन्म तिथि / Date of Birth</span>
+                <span className="text-sm font-medium text-earth">{t("profile.dob")}</span>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {([
-                    { key: "exact" as DobType, label: "सटीक" },
-                    { key: "year" as DobType, label: "वर्ष" },
-                    { key: "decade" as DobType, label: "दशक" },
-                    { key: "marker" as DobType, label: "संदर्भ" },
-                    { key: "unknown" as DobType, label: "अज्ञात" },
+                    { key: "exact" as DobType, tKey: "profile.dobExact" },
+                    { key: "year" as DobType, tKey: "profile.dobYear" },
+                    { key: "decade" as DobType, tKey: "profile.dobDecade" },
+                    { key: "marker" as DobType, tKey: "profile.dobMarker" },
+                    { key: "unknown" as DobType, tKey: "profile.dobUnknown" },
                   ]).map((opt) => (
-                    <button
-                      key={opt.key}
-                      type="button"
-                      onClick={() => setDobType(opt.key)}
+                    <button key={opt.key} type="button" onClick={() => setDobType(opt.key)}
                       className={`rounded-btn px-3 py-1.5 text-xs font-medium transition-colors ${
-                        dobType === opt.key
-                          ? "bg-accent text-white"
-                          : "border border-border-warm text-dark/60"
-                      }`}
-                    >
-                      {opt.label}
+                        dobType === opt.key ? "bg-accent text-white" : "border border-border-warm text-dark/60"
+                      }`}>
+                      {t(opt.tKey)}
                     </button>
                   ))}
                 </div>
                 <div className="mt-2">
                   {dobType === "exact" && (
-                    <input type="date" value={dobExact} onChange={(e) => setDobExact(e.target.value)}
-                      className="input-field" />
+                    <input type="date" value={dobExact} onChange={(e) => setDobExact(e.target.value)} className="input-field" />
                   )}
                   {dobType === "year" && (
-                    <input type="number" value={dobYear} onChange={(e) => setDobYear(e.target.value)} placeholder="1955"
-                      className="input-field" />
+                    <input type="number" value={dobYear} onChange={(e) => setDobYear(e.target.value)} placeholder="1955" className="input-field" />
                   )}
                   {dobType === "decade" && (
-                    <select value={dobDecade} onChange={(e) => setDobDecade(e.target.value)}
-                      className="input-field">
-                      <option value="">दशक चुनें</option>
+                    <select value={dobDecade} onChange={(e) => setDobDecade(e.target.value)} className="input-field">
+                      <option value="">{t("profile.selectDecade")}</option>
                       {DOB_DECADES.map((d) => <option key={d} value={d}>{d}</option>)}
                     </select>
                   )}
                   {dobType === "marker" && (
-                    <select value={dobMarker} onChange={(e) => setDobMarker(e.target.value)}
-                      className="input-field">
-                      <option value="">संदर्भ चुनें</option>
-                      {DOB_MARKERS.map((m) => <option key={m.value} value={m.value}>{m.label.hi}</option>)}
+                    <select value={dobMarker} onChange={(e) => setDobMarker(e.target.value)} className="input-field">
+                      <option value="">{t("profile.selectMarker")}</option>
+                      {DOB_MARKERS.map((m) => (
+                        <option key={m.value} value={m.value}>{lang === "en" ? m.label.en : m.label.hi}</option>
+                      ))}
                     </select>
                   )}
                 </div>
@@ -346,142 +319,137 @@ export default function AddMemberPage() {
 
               {/* Deceased fields */}
               {!alive && (
-                <div className="space-y-4 rounded-lg border border-earth/10 bg-card-deceased/10 p-4">
-                  <h3 className="text-sm font-semibold text-earth/70">🕊 स्वर्गवासी विवरण / Deceased Details</h3>
+                <div className="space-y-4 rounded-card border border-dark/10 bg-card-deceased/10 p-4">
+                  <h3 className="flex items-center gap-1.5 text-sm font-semibold text-dark/70">
+                    <span className="material-symbols-rounded" style={{ fontSize: "16px" }}>spa</span>
+                    {t("member.deceasedDetails")}
+                  </h3>
                   <label className="block">
-                    <span className="text-sm text-earth/60">मृत्यु वर्ष / Death Year</span>
-                    <input type="number" value={deathYear} onChange={(e) => setDeathYear(e.target.value)} placeholder="2015"
-                      className="mt-1 input-field" />
+                    <span className="text-sm text-dark/60">{t("member.deathYear")}</span>
+                    <input type="number" value={deathYear} onChange={(e) => setDeathYear(e.target.value)} placeholder="2015" className="mt-1 input-field" />
                   </label>
                   <label className="block">
-                    <span className="text-sm text-earth/60">मृत्यु तिथि / Death Tithi</span>
-                    <input type="text" value={deathTithi} onChange={(e) => setDeathTithi(e.target.value)} placeholder="Bhadrapada Krishna Amavasya"
-                      className="mt-1 input-field" />
+                    <span className="text-sm text-dark/60">{t("member.deathTithi")}</span>
+                    <input type="text" value={deathTithi} onChange={(e) => setDeathTithi(e.target.value)} className="mt-1 input-field" />
                   </label>
                   <label className="block">
-                    <span className="text-sm text-earth/60">तीर्थ स्थल / Teerth Sthal</span>
-                    <select value={teerthSthal} onChange={(e) => setTeerthSthal(e.target.value)}
-                      className="mt-1 input-field">
-                      <option value="">चुनें</option>
-                      {TEERTH_STHALS.map((t) => <option key={t} value={t}>{t}</option>)}
+                    <span className="text-sm text-dark/60">{t("profile.teerthSthal")}</span>
+                    <select value={teerthSthal} onChange={(e) => setTeerthSthal(e.target.value)} className="mt-1 input-field">
+                      <option value="">{t("profile.select")}</option>
+                      {TEERTH_STHALS.map((ts) => <option key={ts} value={ts}>{ts}</option>)}
                     </select>
                   </label>
                 </div>
               )}
 
-              {/* Occupation + Notes (collapsible) */}
-              <details className="rounded-lg border border-border-warm">
-                <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-earth/60">
-                  अतिरिक्त / Additional Details
+              {/* Additional Details (collapsible) */}
+              <details className="rounded-card border border-border-warm">
+                <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-dark/60">
+                  {t("member.additionalDetails")}
                 </summary>
                 <div className="space-y-4 px-4 pb-4">
                   <label className="block">
-                    <span className="text-sm text-earth/60">व्यवसाय / Occupation</span>
-                    <input type="text" value={occupation} onChange={(e) => setOccupation(e.target.value)} placeholder="Teacher, Farmer..."
-                      className="mt-1 input-field" />
+                    <span className="text-sm text-dark/60">{t("member.occupation")}</span>
+                    <input type="text" value={occupation} onChange={(e) => setOccupation(e.target.value)} className="mt-1 input-field" />
                   </label>
                   <label className="block">
-                    <span className="text-sm text-earth/60">नोट्स / Notes</span>
-                    <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} placeholder="Any special notes..."
-                      className="mt-1 input-field" />
+                    <span className="text-sm text-dark/60">{t("member.notes")}</span>
+                    <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className="mt-1 input-field" />
                   </label>
                   <label className="block">
-                    <span className="text-sm text-earth/60">मौखिक इतिहास / Oral History</span>
-                    <textarea value={oralHistory} onChange={(e) => setOralHistory(e.target.value)} rows={3} placeholder="Stories and memories from elders..."
-                      className="mt-1 input-field" />
+                    <span className="text-sm text-dark/60">{t("member.oralHistory")}</span>
+                    <textarea value={oralHistory} onChange={(e) => setOralHistory(e.target.value)} rows={3} className="mt-1 input-field" />
                   </label>
                 </div>
               </details>
 
               <div className="flex gap-3">
-                <button onClick={() => setStep("relation")}
-                  className="btn-ghost flex-1">
-                  &larr; पीछे
+                <button onClick={() => setStep("relation")} className="btn-ghost flex-1">
+                  <span className="material-symbols-rounded" style={{ fontSize: "16px" }}>arrow_back</span> {t("common.back")}
                 </button>
-                <button
-                  onClick={() => setStep(isSpouseRelation ? "marriage" : "confirm")}
-                  disabled={!name}
-                  className="btn-primary flex-1">
-                  आगे &rarr;
+                <button onClick={() => setStep(isSpouseRelation ? "marriage" : "confirm")}
+                  disabled={!primaryName} className="btn-primary flex-1">
+                  {t("common.next")} &rarr;
                 </button>
               </div>
             </div>
           )}
 
-          {/* ─── STEP 3: Marriage Form (for spouse relations) ─── */}
+          {/* ─── STEP 3: Marriage Form ─── */}
           {step === "marriage" && (
             <div className="space-y-5">
-              <h2 className="text-lg font-bold text-earth">विवाह विवरण / Marriage Details</h2>
+              <h2 className="text-lg font-bold text-earth">{t("member.marriageDetails")}</h2>
 
               <label className="block">
-                <span className="text-sm font-medium text-earth">जीवनसाथी का नाम / Spouse Name <span className="text-error">*</span></span>
-                <input type="text" value={spouseName || name} onChange={(e) => setSpouseName(e.target.value)}
+                <span className="text-sm font-medium text-earth">
+                  {t("marriage.spouseName")} <span className="text-error">*</span>
+                </span>
+                <input type="text" value={spouseName || name || nameHi} onChange={(e) => setSpouseName(e.target.value)}
                   className="mt-1 input-field" />
               </label>
 
               <label className="block">
-                <span className="text-sm font-medium text-earth">पिता का नाम / Father&apos;s Name <span className="text-error">*</span></span>
-                <input type="text" value={spouseFatherName} onChange={(e) => setSpouseFatherName(e.target.value)} placeholder="Father's name"
+                <span className="text-sm font-medium text-earth">
+                  {t("marriage.fatherName")} <span className="text-error">*</span>
+                </span>
+                <input type="text" value={spouseFatherName} onChange={(e) => setSpouseFatherName(e.target.value)}
                   className="mt-1 input-field" />
               </label>
 
               <label className="block">
-                <span className="text-sm font-medium text-earth">गोत्र / Gotra <span className="text-error">*</span></span>
-                <select value={spouseGotra} onChange={(e) => setSpouseGotra(e.target.value)}
-                  className="mt-1 input-field">
-                  <option value="">गोत्र चुनें</option>
+                <span className="text-sm font-medium text-earth">
+                  {t("profile.gotra")} <span className="text-error">*</span>
+                </span>
+                <select value={spouseGotra} onChange={(e) => setSpouseGotra(e.target.value)} className="mt-1 input-field">
+                  <option value="">{t("profile.select")}</option>
                   {GOTRAS.map((g) => <option key={g} value={g}>{g}</option>)}
                 </select>
               </label>
 
               <div className="grid grid-cols-2 gap-4">
                 <label className="block">
-                  <span className="text-sm font-medium text-earth">गांव / Village</span>
+                  <span className="text-sm font-medium text-earth">{t("profile.village")}</span>
                   <input type="text" value={spouseVillage} onChange={(e) => setSpouseVillage(e.target.value)}
                     className="mt-1 input-field" />
                 </label>
                 <label className="block">
-                  <span className="text-sm font-medium text-earth">जिला / District</span>
+                  <span className="text-sm font-medium text-earth">{t("profile.district")}</span>
                   <input type="text" value={spouseDistrict} onChange={(e) => setSpouseDistrict(e.target.value)}
                     className="mt-1 input-field" />
                 </label>
               </div>
 
               <label className="block">
-                <span className="text-sm font-medium text-earth">विवाह तिथि / Marriage Date</span>
+                <span className="text-sm font-medium text-earth">{t("marriage.marriageDate")}</span>
                 <input type="date" value={marriageDate} onChange={(e) => setMarriageDate(e.target.value)}
                   className="mt-1 input-field" />
               </label>
 
               <div>
-                <span className="text-sm font-medium text-earth">विवाह स्थिति / Marriage Status</span>
+                <span className="text-sm font-medium text-earth">{t("marriage.status")}</span>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {([
-                    { key: "active" as const, label: "विवाहित / Married" },
-                    { key: "widowed" as const, label: "विधवा/विधुर / Widowed" },
-                    { key: "divorced" as const, label: "तलाकशुदा / Divorced" },
-                    { key: "separated" as const, label: "अलग / Separated" },
+                    { key: "active" as const, tKey: "marriage.active" },
+                    { key: "widowed" as const, tKey: "marriage.widowed" },
+                    { key: "divorced" as const, tKey: "marriage.divorced" },
+                    { key: "separated" as const, tKey: "marriage.separated" },
                   ]).map((s) => (
-                    <button key={s.key} type="button"
-                      onClick={() => setMarriageStatus(s.key)}
+                    <button key={s.key} type="button" onClick={() => setMarriageStatus(s.key)}
                       className={`rounded-btn px-3 py-1.5 text-xs font-medium transition-colors ${
                         marriageStatus === s.key ? "bg-accent text-white" : "border border-border-warm text-dark/60"
                       }`}>
-                      {s.label}
+                      {t(s.tKey)}
                     </button>
                   ))}
                 </div>
               </div>
 
               <div className="flex gap-3">
-                <button onClick={() => setStep("details")}
-                  className="btn-ghost flex-1">
-                  &larr; पीछे
+                <button onClick={() => setStep("details")} className="btn-ghost flex-1">
+                  <span className="material-symbols-rounded" style={{ fontSize: "16px" }}>arrow_back</span> {t("common.back")}
                 </button>
-                <button onClick={() => setStep("confirm")}
-                  disabled={!spouseGotra}
-                  className="btn-primary flex-1">
-                  आगे &rarr;
+                <button onClick={() => setStep("confirm")} disabled={!spouseGotra} className="btn-primary flex-1">
+                  {t("common.next")} &rarr;
                 </button>
               </div>
             </div>
@@ -490,34 +458,40 @@ export default function AddMemberPage() {
           {/* ─── STEP 4: Confirm ─── */}
           {step === "confirm" && (
             <div className="space-y-4">
-              <h2 className="text-lg font-bold text-earth">पुष्टि करें / Confirm</h2>
+              <h2 className="text-lg font-bold text-earth">{t("member.confirm")}</h2>
 
-              <div className="space-y-2 rounded-lg bg-bg-muted p-4 text-sm">
+              <div className="space-y-2 rounded-card bg-bg-muted p-4 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-earth/60">रिश्ता</span>
-                  <span className="font-medium text-earth">{relationConfig?.labelHi} ({relationConfig?.labelEn})</span>
+                  <span className="text-dark/60">{t("member.relation")}</span>
+                  <span className="font-medium text-earth">{relationConfig ? getRelLabel(relationConfig) : ""}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-earth/60">नाम</span>
-                  <span className="font-medium text-earth">{name}</span>
+                  <span className="text-dark/60">{t("member.name")}</span>
+                  <span className="font-medium text-earth">{name || nameHi}</span>
+                </div>
+                {nameHi && name && (
+                  <div className="flex justify-between">
+                    <span className="text-dark/60">{t("profile.nameHi")}</span>
+                    <span className="font-medium text-earth font-hindi">{nameHi}</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="text-dark/60">{t("member.gender")}</span>
+                  <span className="font-medium text-earth">{t(`member.${gender}`)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-earth/60">लिंग</span>
-                  <span className="font-medium text-earth">{gender === "male" ? "♂ पुरुष" : gender === "female" ? "♀ स्त्री" : "अन्य"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-earth/60">स्थिति</span>
-                  <span className="font-medium text-earth">{alive ? "जीवित" : "🕊 स्वर्गवासी"}</span>
+                  <span className="text-dark/60">{t("member.status")}</span>
+                  <span className="font-medium text-earth">{alive ? t("member.alive") : t("member.deceased")}</span>
                 </div>
                 {isSpouseRelation && spouseGotra && (
                   <>
                     <hr className="border-border-warm" />
                     <div className="flex justify-between">
-                      <span className="text-earth/60">विवाह गोत्र</span>
+                      <span className="text-dark/60">{t("profile.gotra")}</span>
                       <span className="font-medium text-earth">{spouseGotra}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-earth/60">गांव</span>
+                      <span className="text-dark/60">{t("profile.village")}</span>
                       <span className="font-medium text-earth">{spouseVillage || "—"}</span>
                     </div>
                   </>
@@ -525,13 +499,11 @@ export default function AddMemberPage() {
               </div>
 
               <div className="flex gap-3">
-                <button onClick={() => setStep(isSpouseRelation ? "marriage" : "details")}
-                  className="btn-ghost flex-1">
-                  &larr; सुधारें
+                <button onClick={() => setStep(isSpouseRelation ? "marriage" : "details")} className="btn-ghost flex-1">
+                  <span className="material-symbols-rounded" style={{ fontSize: "16px" }}>edit</span> {t("common.edit")}
                 </button>
-                <button onClick={handleSave} disabled={saving}
-                  className="btn-primary flex-1">
-                  {saving ? "जोड़ रहे हैं..." : "सदस्य जोड़ें / Add Member"}
+                <button onClick={handleSave} disabled={saving} className="btn-primary flex-1">
+                  {saving ? t("member.adding") : t("member.addMember")}
                 </button>
               </div>
             </div>

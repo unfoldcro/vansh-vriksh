@@ -4,7 +4,9 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "@/hooks/useTranslation";
 import { getUser, createUser, createTree, findDuplicateTrees } from "@/lib/db";
+import TransliterateInput from "@/components/ui/TransliterateInput";
 import {
   GOTRAS, NAKSHATRAS, RASHIS, VARNAS, INDIAN_STATES,
   MP_DISTRICTS, DOB_DECADES, DOB_MARKERS,
@@ -17,6 +19,7 @@ type Step = "identity" | "location" | "ritual" | "review";
 export default function ProfilePage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  const { t, lang } = useTranslation();
   const [step, setStep] = useState<Step>("identity");
   const [saving, setSaving] = useState(false);
   const [duplicates, setDuplicates] = useState<TreeMetadata[]>([]);
@@ -55,14 +58,12 @@ export default function ProfilePage() {
   const [teerthSthal, setTeerthSthal] = useState("");
   const [familyPriest, setFamilyPriest] = useState("");
 
-  // Redirect if not authenticated
   useEffect(() => {
     if (!authLoading && !user) {
       router.push("/verify");
     }
   }, [user, authLoading, router]);
 
-  // Check if user already has a profile
   useEffect(() => {
     if (user) {
       getUser(user.uid).then((profile) => {
@@ -72,6 +73,23 @@ export default function ProfilePage() {
       });
     }
   }, [user, router]);
+
+  const isHindiMode = lang === "hi" || lang === "hinglish";
+
+  // In Hindi mode, user types Hindi name, English is auto-generated
+  // In English mode, user types English name, Hindi is auto-generated
+  const primaryName = isHindiMode ? fullNameHi : fullName;
+  const secondaryName = isHindiMode ? fullName : fullNameHi;
+
+  const setPrimaryName = (val: string) => {
+    if (isHindiMode) setFullNameHi(val);
+    else setFullName(val);
+  };
+
+  const setSecondaryName = (val: string) => {
+    if (isHindiMode) setFullName(val);
+    else setFullNameHi(val);
+  };
 
   const getDobValue = (): string | undefined => {
     switch (dobType) {
@@ -95,7 +113,7 @@ export default function ProfilePage() {
 
     try {
       const profile = {
-        fullName,
+        fullName: fullName || fullNameHi,
         fullNameHi: fullNameHi || undefined,
         alsoKnownAs: alsoKnownAs || undefined,
         dob: getDobValue(),
@@ -122,11 +140,10 @@ export default function ProfilePage() {
         migrationNote: migrationNote || undefined,
         teerthSthal: teerthSthal || undefined,
         familyPriest: familyPriest || undefined,
-        lang: "hi" as const,
+        lang: lang as "hi",
       };
 
-      // Check for duplicates first
-      const surname = fullName.split(" ").pop() || "";
+      const surname = fullName.split(" ").pop() || fullNameHi.split(" ").pop() || "";
       const matches = await findDuplicateTrees(surname, gotra, district);
 
       if (matches.length > 0) {
@@ -159,13 +176,13 @@ export default function ProfilePage() {
     setShowDuplicateModal(false);
 
     const profile = {
-      fullName, fullNameHi, gotra, kulDevta, kulDevi, jati,
+      fullName: fullName || fullNameHi, fullNameHi, gotra, kulDevta, kulDevi, jati,
       village, tehsil, district, state,
       dob: getDobValue(), dobType, dobApproximate: getDobApproximate(),
       phone: user.phoneNumber || undefined,
       email: user.email || undefined,
       authMethod: user.phoneNumber ? "phone" as const : "email" as const,
-      lang: "hi" as const,
+      lang: lang as "hi",
     };
 
     if (choice === "join" && duplicates[0]) {
@@ -179,10 +196,13 @@ export default function ProfilePage() {
     ? GOTRAS.filter((g) => g.toLowerCase().includes(gotraSearch.toLowerCase()))
     : GOTRAS;
 
+  const STEPS: Step[] = ["identity", "location", "ritual", "review"];
+  const stepIndex = STEPS.indexOf(step);
+
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-bg-primary">
-        <div className="text-earth/60">Loading...</div>
+        <div className="text-dark/60"><span className="loading-dot" />{t("common.loading")}</div>
       </div>
     );
   }
@@ -190,73 +210,57 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-bg-primary px-4 py-8">
       <div className="mx-auto max-w-2xl">
-        <Link href="/verify" className="mb-6 inline-block text-sm text-earth/50 hover:text-gold">
-          &larr; वापस / Back
+        <Link href="/verify" className="mb-6 inline-flex items-center gap-1 text-sm text-dark/50 hover:text-accent">
+          <span className="material-symbols-rounded" style={{ fontSize: "16px" }}>arrow_back</span>
+          {t("common.back")}
         </Link>
 
         <h1 className="font-hindi text-2xl font-bold text-earth">
-          प्रोफ़ाइल बनाएं / Create Your Profile
+          {t("profile.title")}
         </h1>
-        <p className="mt-1 text-sm text-earth/50">
-          अपनी पूरी हिंदू पहचान दर्ज करें / Enter your complete Hindu identity
+        <p className="mt-1 text-sm text-dark/50">
+          {t("profile.subtitle")}
         </p>
 
         {/* Step Indicator */}
         <div className="mt-6 flex gap-1">
-          {(["identity", "location", "ritual", "review"] as Step[]).map((s, i) => (
+          {STEPS.map((_, i) => (
             <div
-              key={s}
+              key={i}
               className={`h-1.5 flex-1 rounded-full transition-colors ${
-                (["identity", "location", "ritual", "review"] as Step[]).indexOf(step) >= i
-                  ? "bg-gold"
-                  : "bg-border-warm"
+                stepIndex >= i ? "bg-accent" : "bg-border-warm"
               }`}
             />
           ))}
         </div>
-        <p className="mt-2 text-xs text-earth/40">
-          {step === "identity" && "चरण 1/4 — पहचान / Step 1/4 — Identity"}
-          {step === "location" && "चरण 2/4 — स्थान / Step 2/4 — Location"}
-          {step === "ritual" && "चरण 3/4 — परंपरा / Step 3/4 — Ritual (Optional)"}
-          {step === "review" && "चरण 4/4 — समीक्षा / Step 4/4 — Review"}
+        <p className="mt-2 text-xs text-dark/40">
+          {t(`profile.step${stepIndex + 1}`)}
         </p>
 
         <div className="mt-6 card p-6">
           {/* ─── STEP 1: Identity ─── */}
           {step === "identity" && (
             <div className="space-y-5">
-              {/* Full Name */}
-              <label className="block">
+              {/* Name with auto-transliteration */}
+              <div>
                 <span className="text-sm font-medium text-earth">
-                  पूरा नाम / Full Name <span className="text-error">*</span>
+                  {t("profile.fullName")} <span className="text-error">*</span>
                 </span>
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Rajesh Patil"
-                  className="input-field mt-1"
+                <TransliterateInput
+                  value={primaryName}
+                  onChange={setPrimaryName}
+                  transliteratedValue={secondaryName}
+                  onTransliteratedChange={setSecondaryName}
+                  placeholder={isHindiMode ? "राजेश पाटिल" : "Rajesh Patil"}
+                  required
+                  className="mt-1"
                 />
-              </label>
-
-              {/* Name in Hindi */}
-              <label className="block">
-                <span className="text-sm font-medium text-earth">
-                  हिंदी में नाम / Name in Hindi
-                </span>
-                <input
-                  type="text"
-                  value={fullNameHi}
-                  onChange={(e) => setFullNameHi(e.target.value)}
-                  placeholder="राजेश पाटिल"
-                  className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 font-hindi text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
-                />
-              </label>
+              </div>
 
               {/* Also Known As */}
               <label className="block">
                 <span className="text-sm font-medium text-earth">
-                  उपनाम / Also Known As
+                  {t("profile.alsoKnownAs")}
                 </span>
                 <input
                   type="text"
@@ -270,255 +274,165 @@ export default function ProfilePage() {
               {/* DOB Type Selector */}
               <div>
                 <span className="text-sm font-medium text-earth">
-                  जन्म तिथि / Date of Birth
+                  {t("profile.dob")}
                 </span>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {([
-                    { key: "exact", label: "सटीक / Exact" },
-                    { key: "year", label: "केवल वर्ष / Year Only" },
-                    { key: "decade", label: "दशक / Decade" },
-                    { key: "marker", label: "संदर्भ / Marker" },
-                    { key: "unknown", label: "अज्ञात / Unknown" },
-                  ] as { key: DobType; label: string }[]).map((opt) => (
+                    { key: "exact" as DobType, tKey: "profile.dobExact" },
+                    { key: "year" as DobType, tKey: "profile.dobYear" },
+                    { key: "decade" as DobType, tKey: "profile.dobDecade" },
+                    { key: "marker" as DobType, tKey: "profile.dobMarker" },
+                    { key: "unknown" as DobType, tKey: "profile.dobUnknown" },
+                  ]).map((opt) => (
                     <button
                       key={opt.key}
                       type="button"
                       onClick={() => setDobType(opt.key)}
-                      className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                      className={`rounded-btn px-3 py-1.5 text-xs font-medium transition-colors ${
                         dobType === opt.key
-                          ? "bg-gold text-earth"
-                          : "border border-border-warm text-earth/60 hover:bg-bg-muted"
+                          ? "bg-accent text-white"
+                          : "border border-border-warm text-dark/60 hover:bg-bg-muted"
                       }`}
                     >
-                      {opt.label}
+                      {t(opt.tKey)}
                     </button>
                   ))}
                 </div>
 
-                {/* DOB Inputs based on type */}
                 <div className="mt-3">
                   {dobType === "exact" && (
-                    <input
-                      type="date"
-                      value={dobExact}
-                      onChange={(e) => setDobExact(e.target.value)}
-                      className="input-field"
-                    />
+                    <input type="date" value={dobExact} onChange={(e) => setDobExact(e.target.value)} className="input-field" />
                   )}
                   {dobType === "year" && (
-                    <input
-                      type="number"
-                      value={dobYear}
-                      onChange={(e) => setDobYear(e.target.value)}
-                      placeholder="1985"
-                      min="1850"
-                      max={new Date().getFullYear()}
-                      className="w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
-                    />
+                    <input type="number" value={dobYear} onChange={(e) => setDobYear(e.target.value)} placeholder="1985"
+                      min="1850" max={new Date().getFullYear()} className="input-field" />
                   )}
                   {dobType === "decade" && (
-                    <select
-                      value={dobDecade}
-                      onChange={(e) => setDobDecade(e.target.value)}
-                      className="input-field"
-                    >
-                      <option value="">दशक चुनें / Select Decade</option>
-                      {DOB_DECADES.map((d) => (
-                        <option key={d} value={d}>{d}</option>
-                      ))}
+                    <select value={dobDecade} onChange={(e) => setDobDecade(e.target.value)} className="input-field">
+                      <option value="">{t("profile.selectDecade")}</option>
+                      {DOB_DECADES.map((d) => <option key={d} value={d}>{d}</option>)}
                     </select>
                   )}
                   {dobType === "marker" && (
-                    <select
-                      value={dobMarker}
-                      onChange={(e) => setDobMarker(e.target.value)}
-                      className="input-field"
-                    >
-                      <option value="">संदर्भ चुनें / Select Marker</option>
+                    <select value={dobMarker} onChange={(e) => setDobMarker(e.target.value)} className="input-field">
+                      <option value="">{t("profile.selectMarker")}</option>
                       {DOB_MARKERS.map((m) => (
                         <option key={m.value} value={m.value}>
-                          {m.label.hi} / {m.label.en}
+                          {lang === "en" ? m.label.en : m.label.hi}
                         </option>
                       ))}
                     </select>
                   )}
                   {dobType === "unknown" && (
-                    <p className="text-sm text-earth/40">
-                      कोई बात नहीं — बाद में जोड़ सकते हैं / No worries — you can add later
-                    </p>
+                    <p className="text-sm text-dark/40">{t("profile.dobUnknownNote")}</p>
                   )}
                 </div>
               </div>
 
-              {/* Gotra - Searchable */}
+              {/* Gotra */}
               <div>
                 <span className="text-sm font-medium text-earth">
-                  गोत्र / Gotra <span className="text-error">*</span>
+                  {t("profile.gotra")} <span className="text-error">*</span>
                 </span>
                 <input
                   type="text"
                   value={gotra || gotraSearch}
-                  onChange={(e) => {
-                    setGotraSearch(e.target.value);
-                    setGotra("");
-                  }}
-                  placeholder="खोजें / Search gotra..."
+                  onChange={(e) => { setGotraSearch(e.target.value); setGotra(""); }}
+                  placeholder={t("profile.searchGotra")}
                   className="input-field mt-1"
                 />
                 {gotraSearch && !gotra && (
-                  <div className="mt-1 max-h-40 overflow-y-auto rounded-lg border border-border-warm bg-bg-card shadow-lg">
+                  <div className="mt-1 max-h-40 overflow-y-auto rounded-card border border-border-warm bg-bg-card shadow-lg">
                     {filteredGotras.map((g) => (
-                      <button
-                        key={g}
-                        type="button"
+                      <button key={g} type="button"
                         onClick={() => { setGotra(g); setGotraSearch(""); }}
-                        className="block w-full px-4 py-2 text-left text-sm text-earth hover:bg-bg-muted"
-                      >
+                        className="block w-full px-4 py-2 text-left text-sm text-earth hover:bg-bg-muted">
                         {g}
                       </button>
                     ))}
                     {filteredGotras.length === 0 && (
-                      <button
-                        type="button"
+                      <button type="button"
                         onClick={() => { setGotra(gotraSearch); setGotraSearch(""); }}
-                        className="block w-full px-4 py-2 text-left text-sm text-gold"
-                      >
-                        &quot;{gotraSearch}&quot; जोड़ें / Add &quot;{gotraSearch}&quot;
+                        className="block w-full px-4 py-2 text-left text-sm text-accent">
+                        {t("profile.addGotra")} &quot;{gotraSearch}&quot;
                       </button>
                     )}
                   </div>
                 )}
               </div>
 
-              {/* Kul Devta */}
-              <label className="block">
-                <span className="text-sm font-medium text-earth">कुलदेवता / Kul Devta</span>
-                <input
-                  type="text"
-                  value={kulDevta}
-                  onChange={(e) => setKulDevta(e.target.value)}
-                  list="kulDevtaList"
-                  placeholder="Lord Shiva / भगवान शिव"
-                  className="input-field mt-1"
-                />
-                <datalist id="kulDevtaList">
-                  {COMMON_KUL_DEVTAS.map((d) => (
-                    <option key={d} value={d} />
-                  ))}
-                </datalist>
-              </label>
-
-              {/* Kul Devi */}
-              <label className="block">
-                <span className="text-sm font-medium text-earth">कुलदेवी / Kul Devi</span>
-                <input
-                  type="text"
-                  value={kulDevi}
-                  onChange={(e) => setKulDevi(e.target.value)}
-                  list="kulDeviList"
-                  placeholder="Maa Sharda / माँ शारदा"
-                  className="input-field mt-1"
-                />
-                <datalist id="kulDeviList">
-                  {COMMON_KUL_DEVIS.map((d) => (
-                    <option key={d} value={d} />
-                  ))}
-                </datalist>
-              </label>
+              {/* Kul Devta + Kul Devi */}
+              <div className="grid grid-cols-2 gap-4">
+                <label className="block">
+                  <span className="text-sm font-medium text-earth">{t("profile.kulDevta")}</span>
+                  <input type="text" value={kulDevta} onChange={(e) => setKulDevta(e.target.value)}
+                    list="kulDevtaList" className="input-field mt-1" />
+                  <datalist id="kulDevtaList">
+                    {COMMON_KUL_DEVTAS.map((d) => <option key={d} value={d} />)}
+                  </datalist>
+                </label>
+                <label className="block">
+                  <span className="text-sm font-medium text-earth">{t("profile.kulDevi")}</span>
+                  <input type="text" value={kulDevi} onChange={(e) => setKulDevi(e.target.value)}
+                    list="kulDeviList" className="input-field mt-1" />
+                  <datalist id="kulDeviList">
+                    {COMMON_KUL_DEVIS.map((d) => <option key={d} value={d} />)}
+                  </datalist>
+                </label>
+              </div>
 
               {/* Jati */}
               <label className="block">
-                <span className="text-sm font-medium text-earth">जाति / Jati</span>
-                <input
-                  type="text"
-                  value={jati}
-                  onChange={(e) => setJati(e.target.value)}
-                  placeholder="Optional"
-                  className="input-field mt-1"
-                />
-                <p className="mt-1 text-xs text-earth/40">
-                  यह निजी है, केवल आपका परिवार देख सकता है / Private — only your family sees this
-                </p>
+                <span className="text-sm font-medium text-earth">{t("profile.jati")}</span>
+                <input type="text" value={jati} onChange={(e) => setJati(e.target.value)}
+                  className="input-field mt-1" />
+                <p className="mt-1 text-xs text-dark/40">{t("profile.jatiNote")}</p>
               </label>
 
-              {/* Nakshatra + Rashi row */}
+              {/* Nakshatra + Rashi */}
               <div className="grid grid-cols-2 gap-4">
                 <label className="block">
-                  <span className="text-sm font-medium text-earth">नक्षत्र / Nakshatra</span>
-                  <select
-                    value={nakshatra}
-                    onChange={(e) => setNakshatra(e.target.value)}
-                    className="input-field mt-1"
-                  >
-                    <option value="">चुनें / Select</option>
-                    {NAKSHATRAS.map((n) => (
-                      <option key={n} value={n}>{n}</option>
-                    ))}
+                  <span className="text-sm font-medium text-earth">{t("profile.nakshatra")}</span>
+                  <select value={nakshatra} onChange={(e) => setNakshatra(e.target.value)} className="input-field mt-1">
+                    <option value="">{t("profile.select")}</option>
+                    {NAKSHATRAS.map((n) => <option key={n} value={n}>{n}</option>)}
                   </select>
                 </label>
                 <label className="block">
-                  <span className="text-sm font-medium text-earth">राशि / Rashi</span>
-                  <select
-                    value={rashi}
-                    onChange={(e) => setRashi(e.target.value)}
-                    className="input-field mt-1"
-                  >
-                    <option value="">चुनें / Select</option>
-                    {RASHIS.map((r) => (
-                      <option key={r} value={r}>{r}</option>
-                    ))}
+                  <span className="text-sm font-medium text-earth">{t("profile.rashi")}</span>
+                  <select value={rashi} onChange={(e) => setRashi(e.target.value)} className="input-field mt-1">
+                    <option value="">{t("profile.select")}</option>
+                    {RASHIS.map((r) => <option key={r} value={r}>{r}</option>)}
                   </select>
                 </label>
               </div>
 
-              {/* Varna + Shakha + Pravar (collapsible) */}
-              <details className="rounded-lg border border-border-warm">
-                <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-earth/60">
-                  अतिरिक्त पहचान / Additional Identity (Optional)
+              {/* Additional Identity (collapsible) */}
+              <details className="rounded-card border border-border-warm">
+                <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-dark/60">
+                  {t("profile.additionalIdentity")}
                 </summary>
                 <div className="space-y-4 px-4 pb-4">
                   <label className="block">
-                    <span className="text-sm font-medium text-earth">वर्ण / Varna</span>
-                    <select
-                      value={varna}
-                      onChange={(e) => setVarna(e.target.value)}
-                      className="input-field mt-1"
-                    >
-                      <option value="">चुनें / Select</option>
-                      {VARNAS.map((v) => (
-                        <option key={v} value={v}>{v}</option>
-                      ))}
+                    <span className="text-sm font-medium text-earth">{t("profile.varna")}</span>
+                    <select value={varna} onChange={(e) => setVarna(e.target.value)} className="input-field mt-1">
+                      <option value="">{t("profile.select")}</option>
+                      {VARNAS.map((v) => <option key={v} value={v}>{v}</option>)}
                     </select>
                   </label>
                   <label className="block">
-                    <span className="text-sm font-medium text-earth">शाखा / Shakha</span>
-                    <input
-                      type="text"
-                      value={shakha}
-                      onChange={(e) => setShakha(e.target.value)}
-                      placeholder="For Brahmin families"
-                      className="input-field mt-1"
-                    />
+                    <span className="text-sm font-medium text-earth">{t("profile.shakha")}</span>
+                    <input type="text" value={shakha} onChange={(e) => setShakha(e.target.value)} className="input-field mt-1" />
                   </label>
                   <label className="block">
-                    <span className="text-sm font-medium text-earth">प्रवर / Pravar</span>
-                    <input
-                      type="text"
-                      value={pravar}
-                      onChange={(e) => setPravar(e.target.value)}
-                      placeholder="Optional"
-                      className="input-field mt-1"
-                    />
+                    <span className="text-sm font-medium text-earth">{t("profile.pravar")}</span>
+                    <input type="text" value={pravar} onChange={(e) => setPravar(e.target.value)} className="input-field mt-1" />
                   </label>
                 </div>
               </details>
 
-              <button
-                onClick={() => setStep("location")}
-                disabled={!fullName || !gotra}
-                className="btn-primary w-full"
-              >
-                आगे बढ़ें / Next &rarr;
+              <button onClick={() => setStep("location")} disabled={!primaryName || !gotra} className="btn-primary w-full">
+                {t("common.next")} &rarr;
               </button>
             </div>
           )}
@@ -528,123 +442,75 @@ export default function ProfilePage() {
             <div className="space-y-5">
               <label className="block">
                 <span className="text-sm font-medium text-earth">
-                  मूल गांव / Native Village <span className="text-error">*</span>
+                  {t("profile.village")} <span className="text-error">*</span>
                 </span>
-                <input
-                  type="text"
-                  value={village}
-                  onChange={(e) => setVillage(e.target.value)}
-                  placeholder="Doraha"
-                  className="input-field mt-1"
-                />
+                <input type="text" value={village} onChange={(e) => setVillage(e.target.value)}
+                  placeholder="Doraha" className="input-field mt-1" />
               </label>
 
               <label className="block">
-                <span className="text-sm font-medium text-earth">तहसील / Tehsil</span>
-                <input
-                  type="text"
-                  value={tehsil}
-                  onChange={(e) => setTehsil(e.target.value)}
-                  placeholder="Sehore"
-                  className="input-field mt-1"
-                />
+                <span className="text-sm font-medium text-earth">{t("profile.tehsil")}</span>
+                <input type="text" value={tehsil} onChange={(e) => setTehsil(e.target.value)}
+                  placeholder="Sehore" className="input-field mt-1" />
               </label>
 
               <label className="block">
                 <span className="text-sm font-medium text-earth">
-                  जिला / District <span className="text-error">*</span>
+                  {t("profile.district")} <span className="text-error">*</span>
                 </span>
-                <select
-                  value={district}
-                  onChange={(e) => setDistrict(e.target.value)}
-                  className="input-field mt-1"
-                >
-                  <option value="">जिला चुनें / Select District</option>
+                <select value={district} onChange={(e) => setDistrict(e.target.value)} className="input-field mt-1">
+                  <option value="">{t("profile.selectDistrict")}</option>
                   {(state === "Madhya Pradesh" ? MP_DISTRICTS : []).map((d) => (
                     <option key={d} value={d}>{d}</option>
                   ))}
-                  <option value="__other">अन्य / Other (type below)</option>
+                  <option value="__other">{t("profile.otherDistrict")}</option>
                 </select>
                 {district === "__other" && (
-                  <input
-                    type="text"
-                    onChange={(e) => setDistrict(e.target.value)}
-                    placeholder="Type district name"
-                    className="mt-2 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
-                  />
+                  <input type="text" onChange={(e) => setDistrict(e.target.value)}
+                    className="input-field mt-2" />
                 )}
               </label>
 
               <label className="block">
                 <span className="text-sm font-medium text-earth">
-                  राज्य / State <span className="text-error">*</span>
+                  {t("profile.state")} <span className="text-error">*</span>
                 </span>
-                <select
-                  value={state}
-                  onChange={(e) => setState(e.target.value)}
-                  className="input-field mt-1"
-                >
-                  {INDIAN_STATES.map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
+                <select value={state} onChange={(e) => setState(e.target.value)} className="input-field mt-1">
+                  {INDIAN_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
               </label>
 
-              {/* Current Location (collapsible) */}
-              <details className="rounded-lg border border-border-warm">
-                <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-earth/60">
-                  वर्तमान निवास / Current Residence (Optional)
+              <details className="rounded-card border border-border-warm">
+                <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-dark/60">
+                  {t("profile.currentResidence")}
                 </summary>
                 <div className="space-y-4 px-4 pb-4">
                   <label className="block">
-                    <span className="text-sm font-medium text-earth">वर्तमान शहर / Current City</span>
-                    <input
-                      type="text"
-                      value={currentCity}
-                      onChange={(e) => setCurrentCity(e.target.value)}
-                      placeholder="Indore"
-                      className="input-field mt-1"
-                    />
+                    <span className="text-sm font-medium text-earth">{t("profile.currentCity")}</span>
+                    <input type="text" value={currentCity} onChange={(e) => setCurrentCity(e.target.value)}
+                      className="input-field mt-1" />
                   </label>
                   <label className="block">
-                    <span className="text-sm font-medium text-earth">वर्तमान राज्य / Current State</span>
-                    <select
-                      value={currentState}
-                      onChange={(e) => setCurrentState(e.target.value)}
-                      className="input-field mt-1"
-                    >
-                      <option value="">चुनें / Select</option>
-                      {INDIAN_STATES.map((s) => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
+                    <span className="text-sm font-medium text-earth">{t("profile.currentState")}</span>
+                    <select value={currentState} onChange={(e) => setCurrentState(e.target.value)} className="input-field mt-1">
+                      <option value="">{t("profile.select")}</option>
+                      {INDIAN_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </label>
                   <label className="block">
-                    <span className="text-sm font-medium text-earth">प्रवास नोट / Migration Note</span>
-                    <input
-                      type="text"
-                      value={migrationNote}
-                      onChange={(e) => setMigrationNote(e.target.value)}
-                      placeholder="Moved to Indore in 1998"
-                      className="input-field mt-1"
-                    />
+                    <span className="text-sm font-medium text-earth">{t("profile.migrationNote")}</span>
+                    <input type="text" value={migrationNote} onChange={(e) => setMigrationNote(e.target.value)}
+                      className="input-field mt-1" />
                   </label>
                 </div>
               </details>
 
               <div className="flex gap-3">
-                <button
-                  onClick={() => setStep("identity")}
-                  className="btn-ghost flex-1"
-                >
-                  &larr; पीछे / Back
+                <button onClick={() => setStep("identity")} className="btn-ghost flex-1">
+                  <span className="material-symbols-rounded" style={{ fontSize: "16px" }}>arrow_back</span> {t("common.back")}
                 </button>
-                <button
-                  onClick={() => setStep("ritual")}
-                  disabled={!village || !district}
-                  className="btn-primary flex-1"
-                >
-                  आगे / Next &rarr;
+                <button onClick={() => setStep("ritual")} disabled={!village || !district} className="btn-primary flex-1">
+                  {t("common.next")} &rarr;
                 </button>
               </div>
             </div>
@@ -653,56 +519,28 @@ export default function ProfilePage() {
           {/* ─── STEP 3: Ritual (Optional) ─── */}
           {step === "ritual" && (
             <div className="space-y-5">
-              <p className="text-sm text-earth/50">
-                ये वैकल्पिक हैं — बाद में भी जोड़ सकते हैं / These are optional — can add later
-              </p>
+              <p className="text-sm text-dark/50">{t("profile.ritualOptional")}</p>
 
               <label className="block">
-                <span className="text-sm font-medium text-earth">तीर्थ स्थल / Teerth Sthal</span>
-                <select
-                  value={teerthSthal}
-                  onChange={(e) => setTeerthSthal(e.target.value)}
-                  className="input-field mt-1"
-                >
-                  <option value="">चुनें / Select</option>
-                  {TEERTH_STHALS.map((t) => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                  <option value="__other">अन्य / Other</option>
+                <span className="text-sm font-medium text-earth">{t("profile.teerthSthal")}</span>
+                <select value={teerthSthal} onChange={(e) => setTeerthSthal(e.target.value)} className="input-field mt-1">
+                  <option value="">{t("profile.select")}</option>
+                  {TEERTH_STHALS.map((ts) => <option key={ts} value={ts}>{ts}</option>)}
                 </select>
-                {teerthSthal === "__other" && (
-                  <input
-                    type="text"
-                    onChange={(e) => setTeerthSthal(e.target.value)}
-                    placeholder="Type teerth sthal name"
-                    className="mt-2 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
-                  />
-                )}
               </label>
 
               <label className="block">
-                <span className="text-sm font-medium text-earth">पारिवारिक पुरोहित / Family Priest</span>
-                <input
-                  type="text"
-                  value={familyPriest}
-                  onChange={(e) => setFamilyPriest(e.target.value)}
-                  placeholder="Pandit Sharma ji"
-                  className="input-field mt-1"
-                />
+                <span className="text-sm font-medium text-earth">{t("profile.familyPriest")}</span>
+                <input type="text" value={familyPriest} onChange={(e) => setFamilyPriest(e.target.value)}
+                  className="input-field mt-1" />
               </label>
 
               <div className="flex gap-3">
-                <button
-                  onClick={() => setStep("location")}
-                  className="btn-ghost flex-1"
-                >
-                  &larr; पीछे / Back
+                <button onClick={() => setStep("location")} className="btn-ghost flex-1">
+                  <span className="material-symbols-rounded" style={{ fontSize: "16px" }}>arrow_back</span> {t("common.back")}
                 </button>
-                <button
-                  onClick={() => setStep("review")}
-                  className="btn-primary flex-1"
-                >
-                  समीक्षा / Review &rarr;
+                <button onClick={() => setStep("review")} className="btn-primary flex-1">
+                  {t("profile.review")} &rarr;
                 </button>
               </div>
             </div>
@@ -711,49 +549,40 @@ export default function ProfilePage() {
           {/* ─── STEP 4: Review ─── */}
           {step === "review" && (
             <div className="space-y-4">
-              <h2 className="text-lg font-bold text-earth">
-                समीक्षा करें / Review Your Profile
-              </h2>
+              <h2 className="text-lg font-bold text-earth">{t("profile.review")}</h2>
 
-              <div className="space-y-3 rounded-lg bg-bg-muted p-4">
-                <ReviewRow label="नाम / Name" value={fullName} />
-                {fullNameHi && <ReviewRow label="हिंदी नाम" value={fullNameHi} />}
+              <div className="space-y-3 rounded-card bg-bg-muted p-4">
+                <ReviewRow label={t("profile.fullName")} value={fullName || fullNameHi} />
+                {fullNameHi && fullName && <ReviewRow label={t("profile.nameHi")} value={fullNameHi} />}
                 <ReviewRow
-                  label="जन्म / DOB"
+                  label={t("profile.dob")}
                   value={
                     dobType === "exact" ? dobExact :
                     dobType === "year" ? dobYear :
                     dobType === "decade" ? dobDecade :
-                    dobType === "marker" ? DOB_MARKERS.find((m) => m.value === dobMarker)?.label.hi || dobMarker :
-                    "अज्ञात / Unknown"
+                    dobType === "marker" ? DOB_MARKERS.find((m) => m.value === dobMarker)?.label[lang === "en" ? "en" : "hi"] || dobMarker :
+                    t("profile.dobUnknown")
                   }
                 />
-                <ReviewRow label="गोत्र / Gotra" value={gotra} />
-                {kulDevta && <ReviewRow label="कुलदेवता" value={kulDevta} />}
-                {kulDevi && <ReviewRow label="कुलदेवी" value={kulDevi} />}
-                {nakshatra && <ReviewRow label="नक्षत्र" value={nakshatra} />}
-                {rashi && <ReviewRow label="राशि" value={rashi} />}
-                <ReviewRow label="गांव / Village" value={village} />
-                {tehsil && <ReviewRow label="तहसील" value={tehsil} />}
-                <ReviewRow label="जिला / District" value={district} />
-                <ReviewRow label="राज्य / State" value={state} />
-                {currentCity && <ReviewRow label="वर्तमान शहर" value={currentCity} />}
-                {teerthSthal && <ReviewRow label="तीर्थ स्थल" value={teerthSthal} />}
+                <ReviewRow label={t("profile.gotra")} value={gotra} />
+                {kulDevta && <ReviewRow label={t("profile.kulDevta")} value={kulDevta} />}
+                {kulDevi && <ReviewRow label={t("profile.kulDevi")} value={kulDevi} />}
+                {nakshatra && <ReviewRow label={t("profile.nakshatra")} value={nakshatra} />}
+                {rashi && <ReviewRow label={t("profile.rashi")} value={rashi} />}
+                <ReviewRow label={t("profile.village")} value={village} />
+                {tehsil && <ReviewRow label={t("profile.tehsil")} value={tehsil} />}
+                <ReviewRow label={t("profile.district")} value={district} />
+                <ReviewRow label={t("profile.state")} value={state} />
+                {currentCity && <ReviewRow label={t("profile.currentCity")} value={currentCity} />}
+                {teerthSthal && <ReviewRow label={t("profile.teerthSthal")} value={teerthSthal} />}
               </div>
 
               <div className="flex gap-3">
-                <button
-                  onClick={() => setStep("ritual")}
-                  className="btn-ghost flex-1"
-                >
-                  &larr; सुधारें / Edit
+                <button onClick={() => setStep("ritual")} className="btn-ghost flex-1">
+                  <span className="material-symbols-rounded" style={{ fontSize: "16px" }}>edit</span> {t("common.edit")}
                 </button>
-                <button
-                  onClick={handleSubmit}
-                  disabled={saving}
-                  className="btn-primary flex-1"
-                >
-                  {saving ? "बना रहे हैं... / Creating..." : "वृक्ष बनाएं / Create Tree"}
+                <button onClick={handleSubmit} disabled={saving} className="btn-primary flex-1">
+                  {saving ? t("profile.creating") : t("profile.createTree")}
                 </button>
               </div>
             </div>
@@ -764,41 +593,32 @@ export default function ProfilePage() {
       {/* ─── Duplicate Detection Modal ─── */}
       {showDuplicateModal && duplicates.length > 0 && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="w-full max-w-md rounded-xl bg-bg-card p-6 shadow-xl">
-            <h2 className="text-lg font-bold text-earth">
-              क्या यह आपका परिवार है? / Is this your family?
-            </h2>
-            <p className="mt-2 text-sm text-earth/60">
-              {duplicates[0].familySurname} परिवार ({duplicates[0].gotra} गोत्र, {duplicates[0].district})
-              का वंश वृक्ष पहले से मौजूद है।
+          <div className="w-full max-w-md rounded-card bg-bg-card p-6 shadow-xl">
+            <h2 className="text-lg font-bold text-earth">{t("profile.duplicateTitle")}</h2>
+            <p className="mt-2 text-sm text-dark/60">
+              {duplicates[0].familySurname} ({duplicates[0].gotra}, {duplicates[0].district})
+              {" "}{t("profile.duplicateDesc")}
             </p>
-            <div className="mt-4 rounded-lg bg-bg-muted p-3 text-sm">
-              <p className="font-medium text-earth">{duplicates[0].familySurname} Family</p>
-              <p className="text-earth/60">
+            <div className="mt-4 rounded-card bg-bg-muted p-3 text-sm">
+              <p className="font-medium text-earth">{duplicates[0].familySurname}</p>
+              <p className="text-dark/60">
                 {duplicates[0].gotra} | {duplicates[0].village}, {duplicates[0].district}
               </p>
-              <p className="text-earth/60">
-                {duplicates[0].totalMembers} members | {duplicates[0].generations} generations
+              <p className="text-dark/60">
+                {duplicates[0].totalMembers} {t("dashboard.members")} | {duplicates[0].generations} {t("dashboard.generations")}
               </p>
             </div>
             <div className="mt-5 space-y-2">
-              <button
-                onClick={() => handleDuplicateChoice("join")}
-                className="btn-primary w-full"
-              >
-                हां, यह मेरा परिवार है / Yes, this is my family
+              <button onClick={() => handleDuplicateChoice("join")} className="btn-primary w-full">
+                {t("profile.duplicateYes")}
               </button>
-              <button
-                onClick={() => handleDuplicateChoice("new")}
-                className="w-full rounded-lg border border-border-warm px-4 py-3 font-medium text-earth transition-colors hover:bg-bg-muted"
-              >
-                नहीं, अलग परिवार है / No, different family
+              <button onClick={() => handleDuplicateChoice("new")}
+                className="w-full rounded-card border border-border-warm px-4 py-3 font-medium text-earth transition-colors hover:bg-bg-muted">
+                {t("profile.duplicateNo")}
               </button>
-              <button
-                onClick={() => handleDuplicateChoice("later")}
-                className="w-full px-4 py-2 text-sm text-earth/50 transition-colors hover:text-earth"
-              >
-                बाद में देखेंगे / Will check later
+              <button onClick={() => handleDuplicateChoice("later")}
+                className="w-full px-4 py-2 text-sm text-dark/50 transition-colors hover:text-earth">
+                {t("profile.duplicateLater")}
               </button>
             </div>
           </div>
@@ -811,7 +631,7 @@ export default function ProfilePage() {
 function ReviewRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between text-sm">
-      <span className="text-earth/60">{label}</span>
+      <span className="text-dark/60">{label}</span>
       <span className="font-medium text-earth">{value || "—"}</span>
     </div>
   );
