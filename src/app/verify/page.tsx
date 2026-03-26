@@ -1,16 +1,68 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useEmailAuth } from "@/hooks/useAuth";
+import { useEmailAuth, useAuth } from "@/hooks/useAuth";
 
 export default function VerifyPage() {
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const [email, setEmail] = useState("");
-  const { sendLink, error: emailError, sending: emailSending, linkSent } = useEmailAuth();
+  const [completing, setCompleting] = useState(false);
+  const [completeError, setCompleteError] = useState("");
+  const { sendLink, completeSignIn, error: emailError, sending: emailSending, linkSent } = useEmailAuth();
+
+  // If already logged in, redirect
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push("/profile");
+    }
+  }, [user, authLoading, router]);
+
+  // On page load, check if this is a magic link return
+  useEffect(() => {
+    const finishSignIn = async () => {
+      setCompleting(true);
+      try {
+        const result = await completeSignIn();
+        if (result) {
+          router.push("/profile");
+        } else {
+          setCompleting(false);
+        }
+      } catch {
+        setCompleteError("लिंक अमान्य या समाप्त हो गया। कृपया दोबारा भेजें। / Link invalid or expired. Please send again.");
+        setCompleting(false);
+      }
+    };
+
+    if (typeof window !== "undefined") {
+      const url = window.location.href;
+      // Firebase magic links contain these parameters
+      if (url.includes("mode=email") || url.includes("oobCode=") || url.includes("apiKey=")) {
+        finishSignIn();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleEmailSubmit = async () => {
     await sendLink(email);
   };
+
+  // Show loading while completing sign-in from magic link
+  if (completing) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-bg-primary px-4">
+        <div className="card p-8 text-center">
+          <div className="text-3xl">🔐</div>
+          <p className="mt-3 font-medium text-dark">सत्यापित कर रहे हैं... / Verifying...</p>
+          <p className="mt-1 text-sm text-dark/40">कृपया प्रतीक्षा करें / Please wait</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-bg-primary px-4">
@@ -48,8 +100,8 @@ export default function VerifyPage() {
                   We&apos;ll send you a magic link. Click it to sign in.
                 </p>
 
-                {emailError && (
-                  <p className="text-sm text-error">{emailError}</p>
+                {(emailError || completeError) && (
+                  <p className="text-sm text-error">{emailError || completeError}</p>
                 )}
 
                 <button
