@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
@@ -37,6 +37,18 @@ export default function TreeViewPage() {
   const [passcodeUnlocked, setPasscodeUnlocked] = useState(false);
   const [enteredPasscode, setEnteredPasscode] = useState("");
   const [passcodeError, setPasscodeError] = useState(false);
+
+  // Scroll to the focused/self member card
+  const scrollToSelf = useCallback(() => {
+    if (!selfMemberId) return;
+    const el = document.querySelector(`[data-member-id="${selfMemberId}"]`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+      // Brief highlight flash
+      el.classList.add("ring-4", "ring-accent/50");
+      setTimeout(() => el.classList.remove("ring-4", "ring-accent/50"), 1500);
+    }
+  }, [selfMemberId]);
 
   useEffect(() => {
     // Demo tree — load instantly, no Firestore
@@ -197,9 +209,9 @@ export default function TreeViewPage() {
   // ─── PUBLIC/SHARED VIEW (non-logged-in users) ───
   if (!user) {
     return (
-      <div className="min-h-screen bg-bg-primary">
+      <div className="min-h-screen bg-bg-primary pb-16">
         {/* Minimal Header */}
-        <div className="border-b border-border-warm bg-bg-card px-4 py-3">
+        <div className="sticky top-0 z-30 border-b border-border-warm bg-bg-card px-4 py-3">
           <div className="mx-auto flex max-w-4xl items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="material-symbols-rounded text-accent" style={{ fontSize: "24px" }}>park</span>
@@ -227,15 +239,24 @@ export default function TreeViewPage() {
           )}
         </div>
 
-        {/* Small footer with CTAs */}
-        <div className="border-t border-border-warm bg-bg-card px-4 py-4">
-          <div className="mx-auto flex max-w-4xl flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <p className="text-xs text-dark/30">Vansh-Vriksh.unfoldcro.in</p>
-            <div className="flex gap-2">
-              <Link href="/verify" className="rounded-btn border border-border-warm px-4 py-2 text-xs font-medium text-dark/50 transition-colors hover:bg-bg-muted">
+        {/* Sticky bottom bar */}
+        <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-border-warm bg-bg-card px-4 py-3 shadow-[0_-2px_8px_rgba(0,0,0,0.05)]">
+          <div className="mx-auto flex max-w-4xl items-center justify-between">
+            <p className="hidden sm:block text-xs text-dark/30">Vansh-Vriksh.unfoldcro.in</p>
+            <div className="flex flex-1 sm:flex-none items-center gap-2">
+              {selfMemberId && (
+                <button
+                  onClick={scrollToSelf}
+                  className="flex items-center gap-1.5 rounded-btn border border-border-warm px-3 py-2 text-xs font-medium text-dark/50 transition-colors hover:bg-bg-muted"
+                >
+                  <span className="material-symbols-rounded text-accent" style={{ fontSize: "16px" }}>my_location</span>
+                  Locate Me
+                </button>
+              )}
+              <Link href="/verify" className="flex-1 sm:flex-none rounded-btn border border-border-warm px-4 py-2 text-center text-xs font-medium text-dark/50 transition-colors hover:bg-bg-muted">
                 {t("landing.createTree")}
               </Link>
-              <Link href={`/join/${treeId}`} className="btn-primary px-4 py-2 text-xs">
+              <Link href={`/join/${treeId}`} className="flex-1 sm:flex-none btn-primary px-4 py-2 text-center text-xs">
                 {t("tree.joinTree")}
               </Link>
             </div>
@@ -247,9 +268,9 @@ export default function TreeViewPage() {
 
   // ─── LOGGED-IN VIEW (full experience) ───
   return (
-    <div className="min-h-screen bg-bg-primary">
+    <div className="min-h-screen bg-bg-primary pb-16">
       {/* Header */}
-      <div className="border-b border-border-warm bg-bg-card px-4 py-4">
+      <div className="sticky top-0 z-30 border-b border-border-warm bg-bg-card px-4 py-4">
         <div className="mx-auto max-w-4xl">
           <div className="flex items-center justify-between">
             <Link href="/dashboard" className="text-sm text-earth/50 hover:text-gold">
@@ -272,7 +293,7 @@ export default function TreeViewPage() {
       </div>
 
       {/* View Mode Toggle */}
-      <div className="border-b border-border-warm bg-bg-card px-4 py-2">
+      <div className="sticky top-[106px] z-20 border-b border-border-warm bg-bg-card px-4 py-2">
         <div className="mx-auto flex max-w-4xl gap-1">
           {([
             { key: "tree" as ViewMode, icon: "account_tree", label: "वृक्ष / Tree" },
@@ -310,15 +331,34 @@ export default function TreeViewPage() {
         )}
       </div>
 
-      {/* Share FAB (for owners) */}
-      {isOwner && (
-        <button
-          onClick={() => setShowShareModal(true)}
-          className="fixed bottom-6 right-6 flex h-14 w-14 items-center justify-center rounded-full bg-green-seva text-white shadow-lg transition-transform hover:scale-105"
-        >
-          <span className="material-symbols-rounded" style={{ fontSize: "28px" }}>share</span>
-        </button>
-      )}
+      {/* Sticky bottom bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-border-warm bg-bg-card px-4 py-2.5 shadow-[0_-2px_8px_rgba(0,0,0,0.05)]">
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-2">
+          {/* Locate Me */}
+          {selfMemberId && (
+            <button
+              onClick={scrollToSelf}
+              className="flex items-center gap-1.5 rounded-btn border border-border-warm px-3 py-2 text-xs font-medium text-dark/50 transition-colors hover:bg-bg-muted"
+            >
+              <span className="material-symbols-rounded text-accent" style={{ fontSize: "16px" }}>my_location</span>
+              Locate Me
+            </button>
+          )}
+
+          <div className="flex items-center gap-2 ml-auto">
+            {/* Share (for owners) */}
+            {isOwner && (
+              <button
+                onClick={() => setShowShareModal(true)}
+                className="flex items-center gap-1.5 rounded-btn bg-green-seva px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-green-seva/90"
+              >
+                <span className="material-symbols-rounded" style={{ fontSize: "16px" }}>share</span>
+                {t("tree.share")}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Share Modal */}
       {showShareModal && (

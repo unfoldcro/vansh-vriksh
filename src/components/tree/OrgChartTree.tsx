@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useRef, useEffect } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect, type PointerEvent as ReactPointerEvent } from "react";
 
 /* ────────────────────────────── Types ────────────────────────────── */
 
@@ -256,6 +256,38 @@ export default function OrgChartTree({
   const [searchQuery, setSearchQuery] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const focusedRef = useRef<HTMLDivElement>(null);
+  const treeInnerRef = useRef<HTMLDivElement>(null);
+
+  // Pinch-to-zoom state
+  const [scale, setScale] = useState(1);
+  const pinchRef = useRef({ startDist: 0, startScale: 1 });
+  const pointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
+
+  const onPointerDown = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
+    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  }, []);
+
+  const onPointerMove = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
+    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const pts = Array.from(pointersRef.current.values());
+    if (pts.length === 2) {
+      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      if (pinchRef.current.startDist === 0) {
+        pinchRef.current.startDist = dist;
+        pinchRef.current.startScale = scale;
+      } else {
+        const newScale = Math.min(Math.max(pinchRef.current.startScale * (dist / pinchRef.current.startDist), 0.4), 2.5);
+        setScale(newScale);
+      }
+    }
+  }, [scale]);
+
+  const onPointerUp = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
+    pointersRef.current.delete(e.pointerId);
+    if (pointersRef.current.size < 2) {
+      pinchRef.current.startDist = 0;
+    }
+  }, []);
 
   const focusedMember = members.find((m) => m.id === focusedMemberId);
   const focusedGen = focusedMember?.gen ?? 0;
@@ -377,9 +409,48 @@ export default function OrgChartTree({
         </p>
       )}
 
-      {/* Tree container */}
-      <div ref={scrollRef} className="overflow-x-auto pb-4">
-        <div className="flex min-w-fit flex-col items-center px-6">
+      {/* Zoom controls */}
+      {!isDemo && (
+        <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={() => setScale((s) => Math.max(s - 0.15, 0.4))}
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-border-warm bg-white text-dark/40 shadow-sm transition-colors hover:bg-bg-muted"
+          >
+            <span className="material-symbols-rounded" style={{ fontSize: "16px" }}>remove</span>
+          </button>
+          <span className="text-[10px] text-dark/30 w-10 text-center">{Math.round(scale * 100)}%</span>
+          <button
+            onClick={() => setScale((s) => Math.min(s + 0.15, 2.5))}
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-border-warm bg-white text-dark/40 shadow-sm transition-colors hover:bg-bg-muted"
+          >
+            <span className="material-symbols-rounded" style={{ fontSize: "16px" }}>add</span>
+          </button>
+          {scale !== 1 && (
+            <button
+              onClick={() => setScale(1)}
+              className="rounded-full border border-border-warm bg-white px-2 py-1 text-[10px] text-dark/40 shadow-sm transition-colors hover:bg-bg-muted"
+            >
+              Reset
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Tree container — scrollable + pinch-zoomable */}
+      <div
+        ref={scrollRef}
+        className="overflow-auto pb-4 touch-pan-x touch-pan-y"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        style={{ touchAction: "pan-x pan-y" }}
+      >
+        <div
+          ref={treeInnerRef}
+          className="flex min-w-fit flex-col items-center px-6 origin-top"
+          style={{ transform: `scale(${scale})`, transition: "transform 0.1s ease-out" }}
+        >
           {generations.map(([gen, genMembers], genIndex) => {
             const isCollapsed = collapsedGens.has(gen);
             const label = GEN_LABELS[gen];
