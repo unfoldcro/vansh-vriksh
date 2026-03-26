@@ -6,7 +6,38 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/hooks/useTranslation";
 import { getUser, getMembers, getTreeMetadata } from "@/lib/db";
+import { OnboardingGuide } from "@/components/layout/OnboardingGuide";
 import type { UserProfile, Member, TreeMetadata } from "@/types";
+
+// Demo data for visitors who want to explore without signing up
+const DEMO_MEMBERS: Member[] = [
+  { id: "d1", name: "Ramji Patil", nameHi: "रामजी पाटिल", relation: "pardada", relationGroup: "paternal", relationType: "blood", generationLevel: -3, gender: "male", alive: false, dobType: "unknown", status: "active", addedBy: "demo", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+  { id: "d2", name: "Savitri Patil", nameHi: "सावित्री पाटिल", relation: "pardadi", relationGroup: "paternal", relationType: "blood", generationLevel: -3, gender: "female", alive: false, dobType: "unknown", status: "active", addedBy: "demo", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+  { id: "d3", name: "Suresh Patil", nameHi: "सुरेश पाटिल", relation: "father", relationGroup: "paternal", relationType: "blood", generationLevel: -1, gender: "male", alive: true, dobType: "unknown", status: "active", addedBy: "demo", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+  { id: "d4", name: "Kamla Patil", nameHi: "कमला पाटिल", relation: "mother", relationGroup: "paternal", relationType: "blood", generationLevel: -1, gender: "female", alive: true, dobType: "unknown", status: "active", addedBy: "demo", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+  { id: "d5", name: "Rajesh Patil", nameHi: "राजेश पाटिल", relation: "self", relationGroup: "self", relationType: "blood", generationLevel: 0, gender: "male", alive: true, dobType: "unknown", status: "active", addedBy: "demo", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+  { id: "d6", name: "Sunita Patil", nameHi: "सुनीता पाटिल", relation: "wife", relationGroup: "self", relationType: "marriage", generationLevel: 0, gender: "female", alive: true, dobType: "unknown", status: "active", addedBy: "demo", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+  { id: "d7", name: "Arjun Patil", nameHi: "अर्जुन पाटिल", relation: "son", relationGroup: "children", relationType: "blood", generationLevel: 1, gender: "male", alive: true, dobType: "unknown", status: "active", addedBy: "demo", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+  { id: "d8", name: "Ananya Patil", nameHi: "अनन्या पाटिल", relation: "daughter", relationGroup: "children", relationType: "blood", generationLevel: 1, gender: "female", alive: true, dobType: "unknown", status: "active", addedBy: "demo", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+];
+
+const DEMO_TREE: TreeMetadata = {
+  treeId: "PATIL-1985-DEMO",
+  ownerUid: "demo",
+  familySurname: "Patil",
+  gotra: "Kashyap",
+  kulDevta: "",
+  kulDevi: "Maa Sharda",
+  village: "Doraha",
+  tehsil: "Sehore",
+  district: "Sehore",
+  state: "Madhya Pradesh",
+  totalMembers: 8,
+  generations: 4,
+  createdAt: new Date().toISOString(),
+  isPublicToSameGotra: true,
+  status: "active",
+};
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -16,8 +47,20 @@ export default function DashboardPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [treeMeta, setTreeMeta] = useState<TreeMetadata | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isDemo, setIsDemo] = useState(false);
 
   useEffect(() => {
+    // Check demo mode
+    const demoParam = new URLSearchParams(window.location.search).get("demo");
+    const demoStored = localStorage.getItem("vansh-vriksh-demo");
+    if (demoParam === "true" || demoStored === "true") {
+      setIsDemo(true);
+      setMembers(DEMO_MEMBERS);
+      setTreeMeta(DEMO_TREE);
+      setLoading(false);
+      return;
+    }
+
     if (!authLoading && !user) {
       router.push("/verify");
       return;
@@ -49,6 +92,11 @@ export default function DashboardPage() {
     setLoading(false);
   };
 
+  const exitDemo = () => {
+    localStorage.removeItem("vansh-vriksh-demo");
+    router.push("/verify");
+  };
+
   const shareMessage = treeMeta
     ? encodeURIComponent(
         `🌳 ${treeMeta.familySurname} परिवार का वंश वृक्ष देखें!\n${treeMeta.familySurname} Family Tree\nhttps://vansh-vriksh.unfoldcro.in/tree/${treeMeta.treeId}`
@@ -69,22 +117,45 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-bg-primary px-4 py-6">
       <div className="mx-auto max-w-2xl">
+        {/* Demo Banner */}
+        {isDemo && (
+          <div className="mb-4 flex items-center gap-3 rounded-card border-2 border-warning/30 bg-warning/5 px-4 py-3 animate-fade-in-up">
+            <span className="label-mono text-warning">{t("demo.badge")}</span>
+            <p className="flex-1 text-xs text-dark/60">{t("demo.banner")}</p>
+            <button onClick={exitDemo} className="rounded-btn bg-accent px-3 py-1.5 text-xs font-bold uppercase text-white hover:bg-accent-hover transition-colors">
+              {t("demo.bannerAction")}
+            </button>
+          </div>
+        )}
+
+        {/* Onboarding Guide — shown once after first login */}
+        {!isDemo && <OnboardingGuide />}
+
         {/* Header */}
-        <div className="flex items-start justify-between">
+        <div className="mt-4 flex items-start justify-between">
           <div>
-            <h1 className="font-hindi text-2xl font-bold text-earth">
+            <h1 className="font-heading text-2xl font-bold text-earth">
               {treeMeta?.familySurname} {t("stats.families") === "परिवार" ? "परिवार" : "Family"}
             </h1>
             <p className="text-sm text-earth/50">
               {treeMeta?.gotra} {t("profile.gotra")} | {treeMeta?.village}, {treeMeta?.district}
             </p>
           </div>
-          <button
-            onClick={signOut}
-            className="rounded-input border border-border-warm px-3 py-1.5 text-xs text-dark/50 hover:bg-bg-muted transition-colors"
-          >
-            {t("dashboard.logout")}
-          </button>
+          {isDemo ? (
+            <button
+              onClick={exitDemo}
+              className="rounded-input border border-border-warm px-3 py-1.5 text-xs text-dark/50 hover:bg-bg-muted transition-colors"
+            >
+              {t("demo.bannerAction")}
+            </button>
+          ) : (
+            <button
+              onClick={signOut}
+              className="rounded-input border border-border-warm px-3 py-1.5 text-xs text-dark/50 hover:bg-bg-muted transition-colors"
+            >
+              {t("dashboard.logout")}
+            </button>
+          )}
         </div>
 
         {/* Tree ID Badge */}

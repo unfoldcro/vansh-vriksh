@@ -135,6 +135,14 @@ export default function Home() {
             </Link>
           </div>
 
+          {/* Demo link */}
+          <div className="mt-4">
+            <Link href="/verify?demo=true" className="inline-flex items-center gap-1.5 text-sm text-dark/40 transition-colors hover:text-accent">
+              <span className="material-symbols-rounded" style={{ fontSize: "16px" }}>play_circle</span>
+              {t("guide.tryDemoBtn")}
+            </Link>
+          </div>
+
           {/* Scroll indicator */}
           <div className="mt-16 flex flex-col items-center gap-1 text-dark/20">
             <span className="text-xs">{t("landing.scroll")}</span>
@@ -294,6 +302,126 @@ export default function Home() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── INSIDE LOOK — What You'll Fill ─── */}
+      <section className="px-4 py-20 md:py-32">
+        <div className="mx-auto max-w-5xl">
+          <p className="text-center label-mono text-accent">{t("landing.insideLabel")}</p>
+          <h2 className="mt-3 mb-4 text-center font-heading text-3xl font-bold text-dark md:text-4xl">
+            {t("landing.insideTitle")}
+          </h2>
+          <p className="mx-auto mb-12 max-w-lg text-center text-dark/50">
+            {t("landing.insideSubtitle")}
+          </p>
+
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Profile Preview */}
+            <div className="card p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="material-symbols-rounded text-accent" style={{ fontSize: "20px" }}>badge</span>
+                <h3 className="font-heading font-bold text-dark">{t("landing.insideProfile")}</h3>
+              </div>
+              <div className="space-y-2">
+                {[
+                  { label: t("landing.insideFieldName"), example: "Rajesh Patil / राजेश पाटिल" },
+                  { label: t("landing.insideFieldGotra"), example: "Kashyap (काश्यप)" },
+                  { label: t("landing.insideFieldKulDevi"), example: "Maa Sharda (माँ शारदा)" },
+                  { label: t("landing.insideFieldVillage"), example: "Doraha, Sehore, MP" },
+                  { label: t("landing.insideFieldDob"), example: "1985 / ~1940s / Before 1947" },
+                  { label: t("landing.insideFieldNakshatra"), example: "Rohini (रोहिणी)" },
+                ].map((field) => (
+                  <div key={field.label} className="flex items-center justify-between rounded-input bg-bg-muted px-3 py-2">
+                    <span className="text-xs font-medium text-dark/60">{field.label}</span>
+                    <span className="text-xs text-accent font-medium">{field.example}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-xs text-dark/30">{t("landing.insideProfileNote")}</p>
+            </div>
+
+            {/* Member Card Preview */}
+            <div className="card p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="material-symbols-rounded text-accent" style={{ fontSize: "20px" }}>group_add</span>
+                <h3 className="font-heading font-bold text-dark">{t("landing.insideMember")}</h3>
+              </div>
+              <div className="space-y-2">
+                {/* Simulated member cards */}
+                {[
+                  { name: "Ramji Patil (दादा)", color: "bg-card-deceased/30", icon: "🕊", badge: "Gen -2" },
+                  { name: "Suresh Patil (पिता)", color: "bg-card-male/30", icon: "👨", badge: "Gen -1" },
+                  { name: "Kamla née Joshi (माता)", color: "bg-card-female/30", icon: "👩", badge: "née tag" },
+                  { name: "Rajesh Patil (स्वयं)", color: "bg-accent/10", icon: "👤", badge: "Gen 0" },
+                  { name: "Arjun (पुत्र)", color: "bg-card-male/30", icon: "👦", badge: "Gen +1" },
+                ].map((m) => (
+                  <div key={m.name} className={`flex items-center gap-3 rounded-input ${m.color} px-3 py-2`}>
+                    <span>{m.icon}</span>
+                    <span className="flex-1 text-xs font-medium text-dark">{m.name}</span>
+                    <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-bold text-accent">{m.badge}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-xs text-dark/30">{t("landing.insideMemberNote")}</p>
+            </div>
+
+            {/* Marriage System */}
+            <div className="card p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="material-symbols-rounded text-accent" style={{ fontSize: "20px" }}>favorite</span>
+                <h3 className="font-heading font-bold text-dark">{t("landing.insideMarriage")}</h3>
+              </div>
+              <div className="rounded-card border border-accent/10 bg-accent/5 p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">💑</span>
+                  <div>
+                    <p className="text-xs font-bold text-dark">Ananya Patil → Deshmukh</p>
+                    <p className="text-[10px] text-dark/40">née Patil (maiden name preserved forever)</p>
+                  </div>
+                </div>
+                <div className="h-px bg-accent/10" />
+                <div className="grid grid-cols-2 gap-2">
+                  {[t("landing.insideKeepMaiden"), t("landing.insideHusbandName"), t("landing.insideBothNames"), t("landing.insideHyphenated")].map((opt) => (
+                    <div key={opt} className="rounded bg-white px-2 py-1.5 text-center text-[10px] font-medium text-dark/60 border border-border-warm">
+                      {opt}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <p className="mt-3 text-xs text-dark/30">{t("landing.insideMarriageNote")}</p>
+            </div>
+
+            {/* Shraddh + Privacy */}
+            <div className="card p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="material-symbols-rounded text-accent" style={{ fontSize: "20px" }}>lock</span>
+                <h3 className="font-heading font-bold text-dark">{t("landing.insidePrivacy")}</h3>
+              </div>
+              <div className="space-y-3">
+                <div className="rounded-card bg-bg-muted p-3">
+                  <p className="text-xs font-bold text-dark mb-1">{t("landing.insidePrivLevel1")}</p>
+                  <p className="text-[10px] text-dark/50">{t("landing.insidePrivLevel1Desc")}</p>
+                </div>
+                <div className="rounded-card bg-bg-muted p-3">
+                  <p className="text-xs font-bold text-dark mb-1">{t("landing.insidePrivLevel2")}</p>
+                  <p className="text-[10px] text-dark/50">{t("landing.insidePrivLevel2Desc")}</p>
+                </div>
+                <div className="rounded-card bg-bg-muted p-3">
+                  <p className="text-xs font-bold text-dark mb-1">{t("landing.insidePrivLevel3")}</p>
+                  <p className="text-[10px] text-dark/50">{t("landing.insidePrivLevel3Desc")}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Guide CTA */}
+          <div className="mt-8 text-center">
+            <Link href="/guide" className="btn-ghost inline-flex items-center gap-2">
+              <span className="material-symbols-rounded" style={{ fontSize: "16px" }}>menu_book</span>
+              {t("landing.insideGuideLink")}
+            </Link>
           </div>
         </div>
       </section>
@@ -468,6 +596,7 @@ export default function Home() {
             </div>
 
             <div className="flex flex-wrap justify-center gap-6 text-sm text-white/40">
+              <Link href="/guide" className="transition-colors hover:text-accent">{t("nav.guide")}</Link>
               <Link href="/about" className="transition-colors hover:text-accent">{t("nav.about")}</Link>
               <Link href="/privacy" className="transition-colors hover:text-accent">{t("nav.privacy")}</Link>
               <Link href="/contact" className="transition-colors hover:text-accent">{t("nav.contact")}</Link>
