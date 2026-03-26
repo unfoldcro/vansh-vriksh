@@ -73,7 +73,7 @@ function MemberNode({
       onClick={onTap}
       data-member-id={member.id}
       className={`
-        group relative w-[152px] shrink-0 rounded-xl bg-white p-3 text-left
+        group relative min-w-[152px] max-w-[200px] shrink-0 rounded-xl bg-white p-3 text-left
         transition-all duration-200 hover:shadow-md hover:-translate-y-0.5
         border
         ${isFocused
@@ -190,7 +190,7 @@ function BranchConnector({ memberCount }: { memberCount: number }) {
   if (memberCount <= 1) return null;
 
   // Calculate width of the horizontal span
-  const cardWidth = 152;
+  const cardWidth = 170; // avg of min-w-[152px] and max-w-[200px]
   const gap = 12;
   const totalWidth = (memberCount - 1) * (cardWidth + gap);
   const svgWidth = totalWidth + 4;
@@ -258,19 +258,36 @@ export default function OrgChartTree({
   const focusedRef = useRef<HTMLDivElement>(null);
   const treeInnerRef = useRef<HTMLDivElement>(null);
 
-  // Pinch-to-zoom state
+  // Zoom + Pan state
   const [scale, setScale] = useState(1);
+  const [translate, setTranslate] = useState({ x: 0, y: 0 });
   const pinchRef = useRef({ startDist: 0, startScale: 1 });
+  const dragRef = useRef({ isDragging: false, startX: 0, startY: 0, startTx: 0, startTy: 0, moved: false });
   const pointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
 
   const onPointerDown = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
     pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  }, []);
+    // Start drag on single pointer (mouse or single touch)
+    if (pointersRef.current.size === 1) {
+      dragRef.current = {
+        isDragging: true,
+        startX: e.clientX,
+        startY: e.clientY,
+        startTx: translate.x,
+        startTy: translate.y,
+        moved: false,
+      };
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    }
+  }, [translate]);
 
   const onPointerMove = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
     pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     const pts = Array.from(pointersRef.current.values());
+
     if (pts.length === 2) {
+      // Pinch-to-zoom (2 fingers)
+      dragRef.current.isDragging = false;
       const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
       if (pinchRef.current.startDist === 0) {
         pinchRef.current.startDist = dist;
@@ -279,6 +296,17 @@ export default function OrgChartTree({
         const newScale = Math.min(Math.max(pinchRef.current.startScale * (dist / pinchRef.current.startDist), 0.4), 2.5);
         setScale(newScale);
       }
+    } else if (pts.length === 1 && dragRef.current.isDragging) {
+      // Drag to pan (1 finger / mouse)
+      const dx = e.clientX - dragRef.current.startX;
+      const dy = e.clientY - dragRef.current.startY;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+        dragRef.current.moved = true;
+      }
+      setTranslate({
+        x: dragRef.current.startTx + dx,
+        y: dragRef.current.startTy + dy,
+      });
     }
   }, [scale]);
 
@@ -287,6 +315,7 @@ export default function OrgChartTree({
     if (pointersRef.current.size < 2) {
       pinchRef.current.startDist = 0;
     }
+    dragRef.current.isDragging = false;
   }, []);
 
   const focusedMember = members.find((m) => m.id === focusedMemberId);
@@ -425,9 +454,9 @@ export default function OrgChartTree({
           >
             <span className="material-symbols-rounded" style={{ fontSize: "16px" }}>add</span>
           </button>
-          {scale !== 1 && (
+          {(scale !== 1 || translate.x !== 0 || translate.y !== 0) && (
             <button
-              onClick={() => setScale(1)}
+              onClick={() => { setScale(1); setTranslate({ x: 0, y: 0 }); }}
               className="rounded-full border border-border-warm bg-white px-2 py-1 text-[10px] text-dark/40 shadow-sm transition-colors hover:bg-bg-muted"
             >
               Reset
@@ -436,20 +465,26 @@ export default function OrgChartTree({
         </div>
       )}
 
-      {/* Tree container — scrollable + pinch-zoomable */}
+      {/* Tree container — draggable + pinch-zoomable */}
       <div
         ref={scrollRef}
-        className="overflow-auto pb-4 touch-pan-x touch-pan-y"
+        className="overflow-hidden pb-4 select-none"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
-        style={{ touchAction: "pan-x pan-y" }}
+        style={{
+          touchAction: "none",
+          cursor: dragRef.current.isDragging ? "grabbing" : "grab",
+        }}
       >
         <div
           ref={treeInnerRef}
-          className="flex min-w-fit flex-col items-center px-6 origin-top"
-          style={{ transform: `scale(${scale})`, transition: "transform 0.1s ease-out" }}
+          className="flex min-w-fit flex-col items-center px-6 origin-top-left"
+          style={{
+            transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`,
+            transition: dragRef.current.isDragging ? "none" : "transform 0.15s ease-out",
+          }}
         >
           {generations.map(([gen, genMembers], genIndex) => {
             const isCollapsed = collapsedGens.has(gen);
@@ -512,6 +547,8 @@ export default function OrgChartTree({
                         isHighlighted={isHighlighted}
                         isExpanded={isExpanded}
                         onTap={() => {
+                          // Don't trigger tap if user was dragging
+                          if (dragRef.current.moved) return;
                           toggleMemberExpand(member.id);
                           onMemberTap?.(member);
                         }}
