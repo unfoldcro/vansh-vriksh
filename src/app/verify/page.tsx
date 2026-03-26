@@ -1,34 +1,20 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEmailAuth, useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/hooks/useTranslation";
+import { LanguageToggle } from "@/components/layout/LanguageToggle";
 
 export default function VerifyPage() {
-  return (
-    <Suspense fallback={
-      <div className="flex min-h-screen items-center justify-center bg-bg-primary">
-        <span className="loading-dot" />
-      </div>
-    }>
-      <VerifyContent />
-    </Suspense>
-  );
-}
-
-function VerifyContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [completing, setCompleting] = useState(false);
   const [completeError, setCompleteError] = useState("");
   const { sendLink, completeSignIn, error: emailError, sending: emailSending, linkSent } = useEmailAuth();
-
-  const showDemoFirst = searchParams.get("demo") === "true";
 
   // If already logged in, redirect
   useEffect(() => {
@@ -67,12 +53,6 @@ function VerifyContent() {
     await sendLink(email);
   };
 
-  const handleEnterDemo = () => {
-    // Set demo mode flag in localStorage
-    localStorage.setItem("vansh-vriksh-demo", "true");
-    router.push("/dashboard?demo=true");
-  };
-
   // Show loading while completing sign-in from magic link
   if (completing) {
     return (
@@ -88,40 +68,16 @@ function VerifyContent() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-bg-primary px-4">
+      {/* Language Toggle */}
+      <div className="fixed right-4 top-4 z-50">
+        <LanguageToggle />
+      </div>
+
       <div className="w-full max-w-md animate-fade-in-up">
         <Link href="/" className="mb-6 inline-flex items-center gap-1 text-sm text-dark/40 transition-colors hover:text-accent">
           <span className="material-symbols-rounded" style={{ fontSize: "16px" }}>arrow_back</span>
           {t("common.back")}
         </Link>
-
-        {/* Demo Account Card */}
-        <div className={`card mb-4 overflow-hidden border-accent/20 ${showDemoFirst ? "ring-2 ring-accent/30" : ""}`}>
-          <div className="bg-accent/5 px-5 py-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/10">
-                <span className="material-symbols-rounded text-accent" style={{ fontSize: "22px" }}>play_circle</span>
-              </div>
-              <div className="flex-1">
-                <h3 className="font-heading font-bold text-dark text-sm">{t("demo.loginTitle")}</h3>
-                <p className="text-xs text-dark/50">{t("demo.loginDesc")}</p>
-              </div>
-            </div>
-            <button
-              onClick={handleEnterDemo}
-              className="btn-primary mt-3 w-full"
-            >
-              <span className="material-symbols-rounded mr-2" style={{ fontSize: "18px" }}>visibility</span>
-              {t("demo.enterDemo")}
-            </button>
-          </div>
-        </div>
-
-        {/* Separator */}
-        <div className="flex items-center gap-3 my-4">
-          <div className="h-px flex-1 bg-border-warm" />
-          <span className="text-xs text-dark/30 uppercase tracking-wider font-body">{t("demo.orSeparator")}</span>
-          <div className="h-px flex-1 bg-border-warm" />
-        </div>
 
         {/* Email Auth Card */}
         <div className="card p-6">

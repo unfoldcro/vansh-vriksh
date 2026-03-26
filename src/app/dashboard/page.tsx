@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/hooks/useTranslation";
 import { getUser, getMembers, getTreeMetadata } from "@/lib/db";
 import { OnboardingGuide } from "@/components/layout/OnboardingGuide";
+import { LanguageToggle } from "@/components/layout/LanguageToggle";
 import { DEMO_MEMBERS, DEMO_TREE } from "@/lib/demo-data";
 import type { UserProfile, Member, TreeMetadata } from "@/types";
 
@@ -87,15 +88,27 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-bg-primary px-4 py-6">
+      {/* Language Toggle */}
+      <div className="fixed right-4 top-4 z-50">
+        <LanguageToggle />
+      </div>
+
       <div className="mx-auto max-w-2xl">
         {/* Demo Banner */}
         {isDemo && (
-          <div className="mb-4 flex items-center gap-3 rounded-card border-2 border-warning/30 bg-warning/5 px-4 py-3 animate-fade-in-up">
-            <span className="label-mono text-warning">{t("demo.badge")}</span>
-            <p className="flex-1 text-xs text-dark/60">{t("demo.banner")}</p>
-            <button onClick={exitDemo} className="rounded-btn bg-accent px-3 py-1.5 text-xs font-bold uppercase text-white hover:bg-accent-hover transition-colors">
-              {t("demo.bannerAction")}
-            </button>
+          <div className="mb-4 rounded-card border-2 border-warning/30 bg-warning/5 px-4 py-3 animate-fade-in-up">
+            <div className="flex items-center gap-3">
+              <span className="label-mono text-warning">{t("demo.badge")}</span>
+              <p className="flex-1 text-xs text-dark/60">{t("demo.banner")}</p>
+            </div>
+            <div className="mt-3 flex gap-2">
+              <Link href="/verify" onClick={() => localStorage.removeItem("vansh-vriksh-demo")} className="btn-primary flex-1 text-center text-xs py-1.5">
+                {t("demo.createTree")}
+              </Link>
+              <Link href="/search" onClick={() => localStorage.removeItem("vansh-vriksh-demo")} className="rounded-btn border border-border-warm bg-white flex-1 text-center text-xs py-1.5 font-medium text-dark/60 hover:bg-bg-muted transition-colors">
+                {t("demo.joinExisting")}
+              </Link>
+            </div>
           </div>
         )}
 
@@ -117,7 +130,7 @@ export default function DashboardPage() {
               onClick={exitDemo}
               className="rounded-input border border-border-warm px-3 py-1.5 text-xs text-dark/50 hover:bg-bg-muted transition-colors"
             >
-              {t("demo.bannerAction")}
+              {t("common.back")}
             </button>
           ) : (
             <button

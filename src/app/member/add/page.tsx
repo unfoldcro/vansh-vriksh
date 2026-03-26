@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/hooks/useTranslation";
 import { addMember } from "@/lib/db";
+import { isDemoMode } from "@/lib/demo-data";
 import { RELATION_GROUPS, RELATIONS, getRelationConfig } from "@/lib/relations";
 import { DOB_DECADES, DOB_MARKERS, GOTRAS, TEERTH_STHALS } from "@/lib/data";
 import TransliterateInput from "@/components/ui/TransliterateInput";
@@ -50,9 +51,11 @@ export default function AddMemberPage() {
   const [marriageDate, setMarriageDate] = useState("");
   const [marriageStatus, setMarriageStatus] = useState<"active" | "divorced" | "widowed" | "separated">("active");
 
+  const isDemo = isDemoMode();
+
   useEffect(() => {
-    if (!authLoading && !user) router.push("/verify");
-  }, [user, authLoading, router]);
+    if (!authLoading && !user && !isDemo) router.push("/verify");
+  }, [user, authLoading, router, isDemo]);
 
   const relationConfig = getRelationConfig(selectedRelation);
   const isSpouseRelation = relationConfig?.triggersMarriage || false;
@@ -86,8 +89,17 @@ export default function AddMemberPage() {
   };
 
   const handleSave = async () => {
-    if (!user || !relationConfig) return;
+    if (!relationConfig) return;
     setSaving(true);
+
+    // Demo mode — pretend to save, redirect back (data resets on refresh)
+    if (isDemo) {
+      await new Promise((r) => setTimeout(r, 500)); // Brief delay for UX
+      router.push("/dashboard?demo=true");
+      return;
+    }
+
+    if (!user) return;
 
     try {
       const memberData: Partial<Member> = {
@@ -133,7 +145,7 @@ export default function AddMemberPage() {
   const formSteps: FormStep[] = ["relation", "details", ...(isSpouseRelation ? ["marriage" as FormStep] : []), "confirm"];
   const stepIndex = formSteps.indexOf(step);
 
-  if (authLoading) {
+  if (authLoading && !isDemo) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-bg-primary">
         <div className="text-dark/60"><span className="loading-dot" />{t("common.loading")}</div>

@@ -4,11 +4,13 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "@/hooks/useTranslation";
 import { getTreeMetadata, getMembers, getUser } from "@/lib/db";
 import { isDemoTreeId, DEMO_MEMBERS, DEMO_TREE } from "@/lib/demo-data";
 import FamilyTree from "@/components/tree/FamilyTree";
 import UltraLightTree from "@/components/tree/UltraLightTree";
 import ShraddhView from "@/components/tree/ShraddhView";
+import { LanguageToggle } from "@/components/layout/LanguageToggle";
 import type { TreeMetadata, Member } from "@/types";
 
 type ViewMode = "tree" | "ultralight" | "shraddh";
@@ -17,6 +19,7 @@ export default function TreeViewPage() {
   const params = useParams();
   const treeId = params.treeId as string;
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [treeMeta, setTreeMeta] = useState<TreeMetadata | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,23 +88,79 @@ export default function TreeViewPage() {
     );
   }
 
+  // ─── PUBLIC/SHARED VIEW (non-logged-in users) ───
+  // Clean, minimal — just the tree with a small header
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-bg-primary">
+        {/* Minimal Header */}
+        <div className="border-b border-border-warm bg-bg-card px-4 py-3">
+          <div className="mx-auto flex max-w-4xl items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="material-symbols-rounded text-accent" style={{ fontSize: "24px" }}>park</span>
+              <div>
+                <h1 className="font-heading text-lg font-bold text-earth">
+                  {treeMeta.familySurname} {t("stats.families") === "परिवार" ? "परिवार" : "Family"}
+                </h1>
+                <p className="text-xs text-earth/40">
+                  {treeMeta.gotra} | {treeMeta.village}, {treeMeta.district}
+                </p>
+              </div>
+            </div>
+            <LanguageToggle />
+          </div>
+        </div>
+
+        {/* Tree Only */}
+        <div className="mx-auto max-w-4xl px-4 py-6">
+          {members.length > 0 ? (
+            <FamilyTree members={members} focusedMemberId={selfMemberId} />
+          ) : (
+            <div className="py-12 text-center">
+              <p className="text-earth/50">{t("common.loading")}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Small footer with CTAs */}
+        <div className="border-t border-border-warm bg-bg-card px-4 py-4">
+          <div className="mx-auto flex max-w-4xl flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <p className="text-xs text-dark/30">Vansh-Vriksh.unfoldcro.in</p>
+            <div className="flex gap-2">
+              <Link href="/verify" className="rounded-btn border border-border-warm px-4 py-2 text-xs font-medium text-dark/50 transition-colors hover:bg-bg-muted">
+                {t("landing.createTree")}
+              </Link>
+              <Link href={`/join/${treeId}`} className="btn-primary px-4 py-2 text-xs">
+                {t("tree.joinTree")}
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── LOGGED-IN VIEW (full experience) ───
   return (
     <div className="min-h-screen bg-bg-primary">
       {/* Header */}
       <div className="border-b border-border-warm bg-bg-card px-4 py-4">
         <div className="mx-auto max-w-4xl">
-          <Link href={user ? "/dashboard" : "/"} className="text-sm text-earth/50 hover:text-gold">
-            &larr; {user ? "डैशबोर्ड" : "होम"} / {user ? "Dashboard" : "Home"}
-          </Link>
-          <h1 className="mt-2 font-hindi text-2xl font-bold text-earth">
-            🌳 {treeMeta.familySurname} परिवार
+          <div className="flex items-center justify-between">
+            <Link href="/dashboard" className="text-sm text-earth/50 hover:text-gold">
+              &larr; {t("nav.dashboard")}
+            </Link>
+            <LanguageToggle />
+          </div>
+          <h1 className="mt-2 font-heading text-2xl font-bold text-earth">
+            {treeMeta.familySurname} {t("stats.families") === "परिवार" ? "परिवार" : "Family"}
           </h1>
           <p className="text-sm text-earth/50">
-            {treeMeta.gotra} गोत्र | {treeMeta.village}, {treeMeta.district}, {treeMeta.state}
+            {treeMeta.gotra} | {treeMeta.village}, {treeMeta.district}, {treeMeta.state}
           </p>
           <div className="mt-2 flex gap-3 text-xs text-earth/40">
-            <span>{treeMeta.totalMembers} सदस्य</span>
-            <span>{treeMeta.generations} पीढ़ी</span>
+            <span>{treeMeta.totalMembers} {t("dashboard.members")}</span>
+            <span>{treeMeta.generations} {t("dashboard.generations")}</span>
             <span>ID: {treeMeta.treeId}</span>
           </div>
         </div>
@@ -141,26 +200,10 @@ export default function TreeViewPage() {
           </>
         ) : (
           <div className="py-12 text-center">
-            <p className="text-earth/50">
-              {user ? "अभी कोई सदस्य नहीं" : "वृक्ष देखने के लिए लॉगिन करें"}
-            </p>
+            <p className="text-earth/50">{t("common.loading")}</p>
           </div>
         )}
       </div>
-
-      {/* Bottom Bar (for non-logged-in users) */}
-      {!user && (
-        <div className="fixed bottom-0 left-0 right-0 border-t border-border-warm bg-bg-card px-4 py-3">
-          <div className="mx-auto flex max-w-4xl gap-3">
-            <Link href="/" className="btn-ghost flex-1 text-center text-sm">
-              बस देख रहे हैं / Just Browsing
-            </Link>
-            <Link href={`/join/${treeId}`} className="btn-primary flex-1 text-center text-sm">
-              इस वृक्ष में जुड़ें / Join This Tree
-            </Link>
-          </div>
-        </div>
-      )}
 
       {/* Share FAB (for owners) */}
       {isOwner && (

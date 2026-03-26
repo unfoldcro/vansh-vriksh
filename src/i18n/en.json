@@ -450,6 +450,8 @@
     "badge": "DEMO MODE",
     "banner": "This is a demo account. Data will not be saved.",
     "bannerAction": "Create Real Account",
+    "createTree": "Create Your Tree",
+    "joinExisting": "Join Existing Tree",
     "loginTitle": "Try Demo Account",
     "loginDesc": "Explore all features without signing up. Data is not saved.",
     "enterDemo": "Enter Demo",

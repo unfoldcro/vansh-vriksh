@@ -449,6 +449,8 @@
     "badge": "DEMO MODE",
     "banner": "Yeh demo account hai. Data save nahi hoga.",
     "bannerAction": "Real Account Banao",
+    "createTree": "Apna Tree Banao",
+    "joinExisting": "Existing Tree Se Judo",
     "loginTitle": "Demo Account Try Karo",
     "loginDesc": "Bina sign up kiye sabhi features dekho. Data save nahi hota.",
     "enterDemo": "Demo Mein Jao",
