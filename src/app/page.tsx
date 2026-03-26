@@ -7,10 +7,11 @@ import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
 import { FeatureCard } from "@/components/ui/FeatureCard";
 import { DemoTree } from "@/components/tree/DemoTree";
 import { LanguageToggle } from "@/components/layout/LanguageToggle";
+import { LanguageChooser } from "@/components/layout/LanguageChooser";
 import { useTranslation } from "@/hooks/useTranslation";
 
 export default function Home() {
-  const { t } = useTranslation();
+  const { t, setLang } = useTranslation();
 
   // Relations for marquee — these are relation names, language-independent display
   const marqueeRelations = [
@@ -82,6 +83,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-bg-primary">
+      {/* Language Chooser Modal — first visit only */}
+      <LanguageChooser onSelect={(lang) => setLang(lang)} />
+
       {/* Language Toggle */}
       <div className="fixed right-4 top-4 z-50">
         <LanguageToggle />
@@ -102,7 +106,7 @@ export default function Home() {
         <div className="relative z-10 animate-fade-in-up">
           <AnimatedTree />
 
-          <h1 className="mt-6 font-hindi text-5xl font-bold text-dark md:text-8xl">
+          <h1 className="mt-6 font-heading text-5xl font-bold text-dark md:text-8xl">
             {t("landing.heroTitle")}
           </h1>
 
@@ -158,7 +162,7 @@ export default function Home() {
           <div className="grid items-center gap-12 md:grid-cols-2">
             <div>
               <p className="label-mono text-accent">{t("landing.aboutLabel")}</p>
-              <h2 className="mt-3 font-hindi text-3xl font-bold text-dark md:text-4xl whitespace-pre-line">
+              <h2 className="mt-3 font-heading text-3xl font-bold text-dark md:text-4xl whitespace-pre-line">
                 {t("landing.aboutTitle")}
               </h2>
               <p className="mt-4 text-lg leading-relaxed text-dark/60">
@@ -212,7 +216,7 @@ export default function Home() {
       <section className="bg-bg-muted px-4 py-20 md:py-32">
         <div className="mx-auto max-w-5xl">
           <p className="text-center label-mono text-accent">{t("landing.featuresLabel")}</p>
-          <h2 className="mt-3 mb-4 text-center font-hindi text-3xl font-bold text-dark md:text-4xl">
+          <h2 className="mt-3 mb-4 text-center font-heading text-3xl font-bold text-dark md:text-4xl">
             {t("landing.featuresTitle")}
           </h2>
           <p className="mx-auto mb-12 max-w-lg text-center text-dark/50">
@@ -264,7 +268,7 @@ export default function Home() {
       <section className="px-4 py-20 md:py-32">
         <div className="mx-auto max-w-3xl">
           <p className="text-center label-mono text-accent">{t("landing.howLabel")}</p>
-          <h2 className="mt-3 mb-14 text-center font-hindi text-3xl font-bold text-dark md:text-4xl">
+          <h2 className="mt-3 mb-14 text-center font-heading text-3xl font-bold text-dark md:text-4xl">
             {t("landing.howTitle")}
           </h2>
 
@@ -284,7 +288,7 @@ export default function Home() {
                       <span className="label-mono text-accent">{s.step}</span>
                       <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-bold text-accent">{s.time}</span>
                     </div>
-                    <h3 className="mt-2 font-hindi text-xl font-bold text-dark">{s.title}</h3>
+                    <h3 className="mt-2 font-heading text-xl font-bold text-dark">{s.title}</h3>
                     <p className="mt-1 text-sm text-dark/60">{s.detail}</p>
                   </div>
                 </div>
@@ -298,7 +302,7 @@ export default function Home() {
       <section className="bg-bg-muted px-4 py-20 md:py-32">
         <div className="mx-auto max-w-5xl">
           <p className="text-center label-mono text-accent">{t("landing.demoLabel")}</p>
-          <h2 className="mt-3 mb-2 text-center font-hindi text-3xl font-bold text-dark md:text-4xl">
+          <h2 className="mt-3 mb-2 text-center font-heading text-3xl font-bold text-dark md:text-4xl">
             {t("landing.demoTitle")}
           </h2>
           <p className="mb-10 text-center text-dark/40">
@@ -317,7 +321,7 @@ export default function Home() {
       <section className="px-4 py-20 md:py-32">
         <div className="mx-auto max-w-4xl">
           <p className="text-center label-mono text-accent">{t("landing.whyLabel")}</p>
-          <h2 className="mt-3 mb-12 text-center font-hindi text-3xl font-bold text-dark md:text-4xl">
+          <h2 className="mt-3 mb-12 text-center font-heading text-3xl font-bold text-dark md:text-4xl">
             {t("landing.whyTitle")}
           </h2>
 
@@ -365,7 +369,7 @@ export default function Home() {
 
         <div className="relative z-10 mx-auto max-w-3xl">
           <span className="material-symbols-rounded text-accent/60" style={{ fontSize: "48px" }}>self_improvement</span>
-          <p className="mt-6 font-hindi text-3xl font-bold text-accent md:text-5xl">
+          <p className="mt-6 font-heading text-3xl font-bold text-accent md:text-5xl">
             {t("landing.sevaTitle")}
           </p>
           <p className="mt-3 text-xl text-white/50">
@@ -395,7 +399,7 @@ export default function Home() {
       <section className="px-4 py-20 md:py-32">
         <div className="mx-auto max-w-2xl">
           <p className="text-center label-mono text-accent">{t("landing.faqLabel")}</p>
-          <h2 className="mt-3 mb-10 text-center font-hindi text-3xl font-bold text-dark md:text-4xl">
+          <h2 className="mt-3 mb-10 text-center font-heading text-3xl font-bold text-dark md:text-4xl">
             {t("landing.faqTitle")}
           </h2>
           <div className="space-y-3">
@@ -429,7 +433,7 @@ export default function Home() {
 
         <div className="relative z-10">
           <span className="material-symbols-rounded text-accent" style={{ fontSize: "48px" }}>park</span>
-          <h2 className="mt-6 font-hindi text-3xl font-bold text-dark md:text-5xl">
+          <h2 className="mt-6 font-heading text-3xl font-bold text-dark md:text-5xl">
             {t("landing.ctaTitle")}
           </h2>
           <p className="mt-3 text-lg text-dark/50">

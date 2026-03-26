@@ -41,9 +41,9 @@ body {
 }
 
 @layer components {
-  /* Primary button — pill, green, uppercase Space Mono */
+  /* Primary button — pill, green, uppercase Poppins */
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-btn bg-accent px-8 py-3 font-mono text-sm font-bold uppercase tracking-[1.5px] text-white transition-all duration-200;
+    @apply inline-flex items-center justify-center rounded-btn bg-accent px-8 py-3 font-body text-sm font-bold uppercase tracking-[1.5px] text-white transition-all duration-200;
   }
   .btn-primary:hover {
     @apply shadow-[1px_5px_0px_0px_#00C853] bg-accent-hover;
@@ -57,7 +57,7 @@ body {
 
   /* Secondary button — outline, dark border */
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-card border-2 border-dark px-6 py-3 font-mono text-sm font-bold uppercase tracking-[1.5px] text-dark transition-all duration-200;
+    @apply inline-flex items-center justify-center rounded-card border-2 border-dark px-6 py-3 font-body text-sm font-bold uppercase tracking-[1.5px] text-dark transition-all duration-200;
   }
   .btn-secondary:hover {
     @apply bg-dark text-white;
@@ -87,9 +87,9 @@ body {
     @apply w-full rounded-input border border-border-warm bg-bg-card px-4 py-3 text-dark placeholder:text-dark/30 transition-all duration-150 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20;
   }
 
-  /* Mono label — for tags, step labels */
+  /* Label — for tags, step labels */
   .label-mono {
-    @apply font-mono text-xs font-bold uppercase tracking-[1.5px];
+    @apply font-body text-xs font-bold uppercase tracking-[1.5px];
   }
 }
 

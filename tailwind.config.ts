@@ -38,14 +38,26 @@ const config: Config = {
         "border-warm": "#e7e9ee",
       },
       fontFamily: {
-        sans: [
-          "var(--font-space-grotesk)",
+        heading: [
+          "var(--font-dm-sans)",
+          "var(--font-noto-sans-devanagari)",
+          "system-ui",
+          "sans-serif",
+        ],
+        body: [
+          "var(--font-poppins)",
           "var(--font-noto-sans-devanagari)",
           "system-ui",
           "sans-serif",
         ],
         hindi: ["var(--font-noto-sans-devanagari)", "sans-serif"],
-        mono: ["var(--font-space-mono)", "monospace"],
+        sans: [
+          "var(--font-poppins)",
+          "var(--font-noto-sans-devanagari)",
+          "system-ui",
+          "sans-serif",
+        ],
+        mono: ["var(--font-poppins)", "monospace"],
       },
       borderRadius: {
         card: "16px",

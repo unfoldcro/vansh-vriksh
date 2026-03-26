@@ -1,10 +1,17 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Noto_Sans_Devanagari, Space_Mono } from "next/font/google";
+import { DM_Sans, Poppins, Noto_Sans_Devanagari } from "next/font/google";
 import "./globals.css";
 
-const spaceGrotesk = Space_Grotesk({
+const dmSans = DM_Sans({
   subsets: ["latin"],
-  variable: "--font-space-grotesk",
+  variable: "--font-dm-sans",
+  display: "swap",
+  weight: ["400", "500", "600", "700", "800"],
+});
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  variable: "--font-poppins",
   display: "swap",
   weight: ["400", "500", "600", "700"],
 });
@@ -14,13 +21,6 @@ const notoSansDevanagari = Noto_Sans_Devanagari({
   variable: "--font-noto-sans-devanagari",
   display: "swap",
   weight: ["400", "500", "600", "700"],
-});
-
-const spaceMono = Space_Mono({
-  subsets: ["latin"],
-  variable: "--font-space-mono",
-  display: "swap",
-  weight: ["400", "700"],
 });
 
 export const metadata: Metadata = {
@@ -63,7 +63,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${spaceGrotesk.variable} ${notoSansDevanagari.variable} ${spaceMono.variable} font-sans antialiased`}
+        className={`${dmSans.variable} ${poppins.variable} ${notoSansDevanagari.variable} font-body antialiased`}
       >
         {children}
       </body>
