@@ -85,7 +85,7 @@ export function AnimatedTree() {
             cx={node.cx}
             cy={node.cy}
             r="4"
-            fill="#C9A84C"
+            fill="#00C853"
             className={`transition-all duration-500 ${node.delay} ${grow ? "scale-100 opacity-100" : "scale-0 opacity-0"}`}
           />
         ))}

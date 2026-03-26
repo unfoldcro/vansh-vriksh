@@ -9,17 +9,21 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Primary Palette
-        gold: "#C9A84C",
-        earth: "#1A1207",
-        "green-seva": "#2D5A1E",
-        "orange-seva": "#D4740E",
+        // Primary Palette (UnfoldCRO brand)
+        accent: "#00C853",
+        "accent-hover": "#00B848",
+        dark: "#0f1115",
+        // Aliases for backward compat (existing classes still work)
+        gold: "#00C853",
+        earth: "#0f1115",
+        "green-seva": "#00C853",
+        "orange-seva": "#FF6D00",
 
-        // Gender Cards
-        "card-male": "#E8F0FE",
-        "card-female": "#FDE8F0",
-        "card-other": "#E8F0E8",
-        "card-deceased": "#D1D5DB",
+        // Gender Cards (UnfoldCRO pastels)
+        "card-male": "#D9DEFC",
+        "card-female": "#F7CBE6",
+        "card-other": "#F0FCB0",
+        "card-deceased": "#E7E9EE",
 
         // Semantic
         success: "#16A34A",
@@ -28,20 +32,25 @@ const config: Config = {
         error: "#DC2626",
 
         // Surfaces
-        "bg-primary": "#FFFBF0",
+        "bg-primary": "#f6f7f9",
         "bg-card": "#FFFFFF",
-        "bg-muted": "#F5F0E8",
-        "border-warm": "#E8DCC8",
+        "bg-muted": "#f0f1f3",
+        "border-warm": "#e7e9ee",
       },
       fontFamily: {
         sans: [
+          "var(--font-space-grotesk)",
           "var(--font-noto-sans-devanagari)",
-          "var(--font-inter)",
           "system-ui",
           "sans-serif",
         ],
         hindi: ["var(--font-noto-sans-devanagari)", "sans-serif"],
-        mono: ["var(--font-jetbrains-mono)", "monospace"],
+        mono: ["var(--font-space-mono)", "monospace"],
+      },
+      borderRadius: {
+        card: "16px",
+        btn: "50px",
+        input: "14px",
       },
     },
   },

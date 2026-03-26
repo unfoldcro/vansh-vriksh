@@ -87,19 +87,19 @@ export default function AdminPage() {
 
         {/* Stats */}
         <div className="mt-6 grid grid-cols-2 gap-3">
-          <div className="rounded-xl border border-border-warm bg-bg-card p-4 text-center">
+          <div className="card p-4 text-center">
             <div className="text-3xl font-bold text-gold">{stats.totalTrees}</div>
             <div className="text-xs text-earth/50">Active Trees</div>
           </div>
-          <div className="rounded-xl border border-border-warm bg-bg-card p-4 text-center">
+          <div className="card p-4 text-center">
             <div className="text-3xl font-bold text-gold">{stats.totalMembers}</div>
             <div className="text-xs text-earth/50">Total Members</div>
           </div>
-          <div className="rounded-xl border border-border-warm bg-bg-card p-4 text-center">
+          <div className="card p-4 text-center">
             <div className="text-3xl font-bold text-warning">{stats.pendingJoinRequests}</div>
             <div className="text-xs text-earth/50">Pending Join Requests</div>
           </div>
-          <div className="rounded-xl border border-border-warm bg-bg-card p-4 text-center">
+          <div className="card p-4 text-center">
             <div className="text-3xl font-bold text-info">{stats.pendingConnections}</div>
             <div className="text-xs text-earth/50">Pending Connections</div>
           </div>
@@ -123,7 +123,7 @@ export default function AdminPage() {
             ].map((action) => (
               <div
                 key={action.label}
-                className="rounded-lg border border-border-warm bg-bg-card px-4 py-3"
+                className="card px-4 py-3"
               >
                 <p className="font-medium text-earth">{action.label}</p>
                 <p className="text-xs text-earth/40">{action.desc}</p>

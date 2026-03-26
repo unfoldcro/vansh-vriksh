@@ -76,10 +76,10 @@ export default function SearchPage() {
                   value={linkInput}
                   onChange={(e) => setLinkInput(e.target.value)}
                   placeholder="Vansh-Vriksh.unfoldcro.in/tree/PATIL-1985-7X3K or PATIL-1985-7X3K"
-                  className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  className="input-field mt-1"
                 />
               </label>
-              <button onClick={handleSearch} className="w-full rounded-lg bg-gold px-6 py-3 font-semibold text-earth transition-colors hover:bg-gold/90">
+              <button onClick={handleSearch} className="btn-primary w-full">
                 खोजें / Search
               </button>
             </div>
@@ -95,10 +95,10 @@ export default function SearchPage() {
                   value={nameInput}
                   onChange={(e) => setNameInput(e.target.value)}
                   placeholder="Patil / पाटिल"
-                  className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  className="input-field mt-1"
                 />
               </label>
-              <button onClick={handleSearch} className="w-full rounded-lg bg-gold px-6 py-3 font-semibold text-earth transition-colors hover:bg-gold/90">
+              <button onClick={handleSearch} className="btn-primary w-full">
                 खोजें / Search
               </button>
             </div>
@@ -114,7 +114,7 @@ export default function SearchPage() {
                   value={villageInput}
                   onChange={(e) => setVillageInput(e.target.value)}
                   placeholder="Doraha"
-                  className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  className="input-field mt-1"
                 />
               </label>
               <label className="block">
@@ -124,10 +124,10 @@ export default function SearchPage() {
                   value={districtInput}
                   onChange={(e) => setDistrictInput(e.target.value)}
                   placeholder="Sehore"
-                  className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  className="input-field mt-1"
                 />
               </label>
-              <button onClick={handleSearch} className="w-full rounded-lg bg-gold px-6 py-3 font-semibold text-earth transition-colors hover:bg-gold/90">
+              <button onClick={handleSearch} className="btn-primary w-full">
                 खोजें / Search
               </button>
             </div>
@@ -143,7 +143,7 @@ export default function SearchPage() {
                   value={nameInput}
                   onChange={(e) => setNameInput(e.target.value)}
                   placeholder="Patil"
-                  className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  className="input-field mt-1"
                 />
               </label>
               <label className="block">
@@ -153,7 +153,7 @@ export default function SearchPage() {
                   value={gotraInput}
                   onChange={(e) => setGotraInput(e.target.value)}
                   placeholder="Kashyap"
-                  className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  className="input-field mt-1"
                 />
               </label>
               <label className="block">
@@ -163,7 +163,7 @@ export default function SearchPage() {
                   value={kulDevtaInput}
                   onChange={(e) => setKulDevtaInput(e.target.value)}
                   placeholder="माँ शारदा"
-                  className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  className="input-field mt-1"
                 />
               </label>
               <div className="grid grid-cols-2 gap-4">
@@ -174,7 +174,7 @@ export default function SearchPage() {
                     value={villageInput}
                     onChange={(e) => setVillageInput(e.target.value)}
                     placeholder="Doraha"
-                    className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                    className="input-field mt-1"
                   />
                 </label>
                 <label className="block">
@@ -184,7 +184,7 @@ export default function SearchPage() {
                     value={districtInput}
                     onChange={(e) => setDistrictInput(e.target.value)}
                     placeholder="Sehore"
-                    className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                    className="input-field mt-1"
                   />
                 </label>
               </div>
@@ -194,10 +194,10 @@ export default function SearchPage() {
                   type="text"
                   value={stateInput}
                   onChange={(e) => setStateInput(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  className="input-field mt-1"
                 />
               </label>
-              <button onClick={handleSearch} className="w-full rounded-lg bg-gold px-6 py-3 font-semibold text-earth transition-colors hover:bg-gold/90">
+              <button onClick={handleSearch} className="btn-primary w-full">
                 खोजें / Search
               </button>
             </div>
@@ -212,7 +212,7 @@ export default function SearchPage() {
             </p>
 
             {/* Option 1: Create New */}
-            <div className="rounded-xl border border-border-warm bg-bg-card p-5 text-center">
+            <div className="card p-5 text-center">
               <div className="text-2xl">✨</div>
               <h3 className="mt-2 font-semibold text-earth">नया वृक्ष बनाएं</h3>
               <p className="mt-1 text-sm text-earth/60">
@@ -220,14 +220,14 @@ export default function SearchPage() {
               </p>
               <Link
                 href="/verify"
-                className="mt-3 inline-block rounded-lg bg-gold px-6 py-2 text-sm font-semibold text-earth transition-colors hover:bg-gold/90"
+                className="btn-primary mt-3 inline-block text-sm"
               >
                 Create New Tree
               </Link>
             </div>
 
             {/* Option 2: Try again */}
-            <div className="rounded-xl border border-border-warm bg-bg-card p-5 text-center">
+            <div className="card p-5 text-center">
               <div className="text-2xl">🔍</div>
               <h3 className="mt-2 font-semibold text-earth">दूसरे तरीके से खोजें</h3>
               <p className="mt-1 text-sm text-earth/60">
@@ -235,14 +235,14 @@ export default function SearchPage() {
               </p>
               <button
                 onClick={() => { setSearched(false); setActiveTab("advanced"); }}
-                className="mt-3 rounded-lg border border-border-warm px-6 py-2 text-sm font-medium text-earth transition-colors hover:bg-bg-muted"
+                className="btn-ghost mt-3 text-sm"
               >
                 Try Advanced Search
               </button>
             </div>
 
             {/* Option 3: Ask family */}
-            <div className="rounded-xl border border-border-warm bg-bg-card p-5 text-center">
+            <div className="card p-5 text-center">
               <div className="text-2xl">📲</div>
               <h3 className="mt-2 font-semibold text-earth">परिवार से पूछें</h3>
               <p className="mt-1 text-sm text-earth/60">
@@ -251,7 +251,7 @@ export default function SearchPage() {
               <div className="mt-3 flex justify-center gap-2">
                 <button
                   onClick={() => navigator.clipboard.writeText(decodeURIComponent(whatsappMessage))}
-                  className="rounded-lg border border-border-warm px-4 py-2 text-sm font-medium text-earth transition-colors hover:bg-bg-muted"
+                  className="btn-ghost text-sm"
                 >
                   Copy Message
                 </button>

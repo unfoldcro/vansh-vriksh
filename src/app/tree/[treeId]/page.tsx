@@ -62,7 +62,7 @@ export default function TreeViewPage() {
       <div className="flex min-h-screen flex-col items-center justify-center bg-bg-primary px-4">
         <p className="text-2xl">🌳</p>
         <p className="mt-2 text-earth/60">यह वृक्ष नहीं मिला / Tree not found</p>
-        <Link href="/search" className="mt-4 rounded-lg bg-gold px-6 py-2 font-semibold text-earth">
+        <Link href="/search" className="btn-primary mt-4">
           खोजें / Search
         </Link>
       </div>
@@ -102,10 +102,10 @@ export default function TreeViewPage() {
             <button
               key={v.key}
               onClick={() => setViewMode(v.key)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`rounded-btn px-3 py-1.5 text-xs font-medium transition-colors ${
                 viewMode === v.key
-                  ? "bg-gold text-earth"
-                  : "text-earth/50 hover:bg-bg-muted"
+                  ? "bg-accent text-white"
+                  : "text-dark/50 hover:bg-bg-muted"
               }`}
             >
               {v.label}
@@ -135,10 +135,10 @@ export default function TreeViewPage() {
       {!user && (
         <div className="fixed bottom-0 left-0 right-0 border-t border-border-warm bg-bg-card px-4 py-3">
           <div className="mx-auto flex max-w-4xl gap-3">
-            <Link href="/" className="flex-1 rounded-lg border border-border-warm px-4 py-2.5 text-center text-sm font-medium text-earth">
+            <Link href="/" className="btn-ghost flex-1 text-center text-sm">
               बस देख रहे हैं / Just Browsing
             </Link>
-            <Link href={`/join/${treeId}`} className="flex-1 rounded-lg bg-gold px-4 py-2.5 text-center text-sm font-semibold text-earth">
+            <Link href={`/join/${treeId}`} className="btn-primary flex-1 text-center text-sm">
               इस वृक्ष में जुड़ें / Join This Tree
             </Link>
           </div>

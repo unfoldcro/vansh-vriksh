@@ -57,7 +57,7 @@ export default function DashboardPage() {
   if (authLoading || loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-bg-primary">
-        <div className="text-earth/60">Loading...</div>
+        <div className="text-dark/60"><span className="loading-dot" />Loading...</div>
       </div>
     );
   }
@@ -80,19 +80,19 @@ export default function DashboardPage() {
           </div>
           <button
             onClick={signOut}
-            className="rounded-lg border border-border-warm px-3 py-1.5 text-xs text-earth/50 hover:bg-bg-muted"
+            className="rounded-input border border-border-warm px-3 py-1.5 text-xs text-dark/50 hover:bg-bg-muted transition-colors"
           >
             Logout
           </button>
         </div>
 
         {/* Tree ID Badge */}
-        <div className="mt-4 flex items-center gap-2 rounded-lg bg-bg-muted px-4 py-2">
+        <div className="mt-4 flex items-center gap-2 rounded-input bg-bg-muted px-4 py-2">
           <span className="text-xs text-earth/50">Tree ID:</span>
-          <code className="font-mono text-sm font-bold text-gold">{treeMeta?.treeId}</code>
+          <code className="font-mono text-sm font-bold text-accent">{treeMeta?.treeId}</code>
           <button
             onClick={() => navigator.clipboard.writeText(treeMeta?.treeId || "")}
-            className="ml-auto text-xs text-earth/40 hover:text-gold"
+            className="ml-auto text-xs text-earth/40 hover:text-accent"
           >
             Copy
           </button>
@@ -109,21 +109,21 @@ export default function DashboardPage() {
         <div className="mt-6 grid grid-cols-2 gap-3">
           <Link
             href="/member/add"
-            className="flex items-center gap-2 rounded-xl border border-border-warm bg-bg-card px-4 py-4 text-sm font-medium text-earth transition-colors hover:border-gold"
+            className="card flex items-center gap-2 px-4 py-4 text-sm font-medium text-dark"
           >
             <span className="text-xl">+</span>
             सदस्य जोड़ें / Add Member
           </Link>
           <Link
             href={`/tree/${treeMeta?.treeId}`}
-            className="flex items-center gap-2 rounded-xl border border-border-warm bg-bg-card px-4 py-4 text-sm font-medium text-earth transition-colors hover:border-gold"
+            className="card flex items-center gap-2 px-4 py-4 text-sm font-medium text-dark"
           >
             <span className="text-xl">🌳</span>
             वृक्ष देखें / View Tree
           </Link>
           <Link
             href="/tree/list"
-            className="flex items-center gap-2 rounded-xl border border-border-warm bg-bg-card px-4 py-4 text-sm font-medium text-earth transition-colors hover:border-gold"
+            className="card flex items-center gap-2 px-4 py-4 text-sm font-medium text-dark"
           >
             <span className="text-xl">📋</span>
             सूची / List View
@@ -132,7 +132,7 @@ export default function DashboardPage() {
             href={`https://wa.me/?text=${shareMessage}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 rounded-xl border border-border-warm bg-bg-card px-4 py-4 text-sm font-medium text-earth transition-colors hover:border-green-seva"
+            className="card flex items-center gap-2 px-4 py-4 text-sm font-medium text-dark hover:border-green-seva"
           >
             <span className="text-xl">📤</span>
             WhatsApp पर भेजें / Share
@@ -143,20 +143,20 @@ export default function DashboardPage() {
         <div className="mt-6">
           <div className="flex items-center justify-between">
             <h2 className="font-bold text-earth">परिवार के सदस्य / Family Members</h2>
-            <Link href="/member/add" className="text-sm text-gold hover:underline">
+            <Link href="/member/add" className="text-sm text-accent hover:underline">
               + जोड़ें
             </Link>
           </div>
 
           {members.length === 0 ? (
-            <div className="mt-4 rounded-xl border border-dashed border-border-warm bg-bg-card p-6 text-center">
+            <div className="mt-4 card border-dashed p-6 text-center">
               <p className="text-2xl">👨‍👩‍👧‍👦</p>
-              <p className="mt-2 text-sm text-earth/60">
+              <p className="mt-2 text-sm text-dark/60">
                 अभी कोई सदस्य नहीं — पहले परिवार जोड़ें!
               </p>
               <Link
                 href="/member/add"
-                className="mt-3 inline-block rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-earth"
+                className="btn-primary mt-3 inline-block text-sm"
               >
                 पहला सदस्य जोड़ें / Add First Member
               </Link>
@@ -169,7 +169,7 @@ export default function DashboardPage() {
               {members.length > 10 && (
                 <Link
                   href="/tree/list"
-                  className="block text-center text-sm text-gold hover:underline"
+                  className="block text-center text-sm text-accent hover:underline"
                 >
                   और {members.length - 10} सदस्य देखें / View {members.length - 10} more
                 </Link>
@@ -182,13 +182,13 @@ export default function DashboardPage() {
         <div className="mt-6 space-y-2">
           <Link
             href="/settings/recycle-bin"
-            className="block rounded-lg border border-border-warm px-4 py-3 text-sm text-earth/60 hover:bg-bg-muted"
+            className="block rounded-card border border-border-warm px-4 py-3 text-sm text-dark/60 hover:bg-bg-muted transition-colors"
           >
             🗑 रीसायकल बिन / Recycle Bin
           </Link>
           <Link
             href="/discover"
-            className="block rounded-lg border border-border-warm px-4 py-3 text-sm text-earth/60 hover:bg-bg-muted"
+            className="block rounded-card border border-border-warm px-4 py-3 text-sm text-dark/60 hover:bg-bg-muted transition-colors"
           >
             🔍 गोत्र खोजें / Gotra Discovery
           </Link>
@@ -214,9 +214,9 @@ export default function DashboardPage() {
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-xl border border-border-warm bg-bg-card p-3 text-center">
-      <div className="text-2xl font-bold text-gold">{value}</div>
-      <div className="text-xs text-earth/50">{label}</div>
+    <div className="card p-3 text-center">
+      <div className="text-2xl font-bold text-accent">{value}</div>
+      <div className="text-xs text-dark/50">{label}</div>
     </div>
   );
 }
@@ -232,7 +232,7 @@ function MemberCard({ member }: { member: Member }) {
   return (
     <Link
       href={`/member/${member.id}`}
-      className={`flex items-center gap-3 rounded-lg border border-border-warm px-4 py-3 transition-colors hover:border-gold ${
+      className={`flex items-center gap-3 rounded-card border border-border-warm px-4 py-3 transition-all hover:border-accent hover:-translate-y-0.5 ${
         !member.alive ? "bg-card-deceased/30" : genderBg + "/30"
       }`}
     >
@@ -247,7 +247,7 @@ function MemberCard({ member }: { member: Member }) {
         <p className="text-xs text-earth/50">
           {member.relation} | Gen {member.generationLevel >= 0 ? "+" : ""}{member.generationLevel}
           {member.relationType !== "blood" && (
-            <span className="ml-1 rounded bg-gold/20 px-1 text-[10px] text-gold">{member.relationType}</span>
+            <span className="ml-1 rounded bg-gold/20 px-1 text-[10px] text-accent">{member.relationType}</span>
           )}
         </p>
       </div>

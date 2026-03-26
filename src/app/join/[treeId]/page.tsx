@@ -91,7 +91,7 @@ export default function JoinTreePage() {
           <p className="mt-1 text-sm text-earth/40">
             Your request has been sent. You&apos;ll be added once the tree owner approves.
           </p>
-          <Link href="/" className="mt-4 inline-block rounded-lg bg-gold px-6 py-2 font-semibold text-earth">
+          <Link href="/" className="mt-4 btn-primary inline-block">
             होम / Home
           </Link>
         </div>
@@ -106,7 +106,7 @@ export default function JoinTreePage() {
           &larr; वृक्ष देखें / View Tree
         </Link>
 
-        <div className="rounded-xl border border-border-warm bg-bg-card p-6 shadow-sm">
+        <div className="card p-6">
           <h1 className="font-hindi text-xl font-bold text-earth">
             वृक्ष में जुड़ें / Join Tree
           </h1>
@@ -122,7 +122,7 @@ export default function JoinTreePage() {
           {!user ? (
             <div className="mt-6 text-center">
               <p className="text-sm text-earth/60">पहले सत्यापन करें / Verify first</p>
-              <Link href="/verify" className="mt-3 inline-block rounded-lg bg-gold px-6 py-3 font-semibold text-earth">
+              <Link href="/verify" className="btn-primary mt-3 inline-block">
                 सत्यापित करें / Verify
               </Link>
             </div>
@@ -134,7 +134,7 @@ export default function JoinTreePage() {
                   type="text"
                   value={yourName}
                   onChange={(e) => setYourName(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  className="input-field mt-1"
                 />
               </label>
 
@@ -145,7 +145,7 @@ export default function JoinTreePage() {
                 <select
                   value={claimedRelation}
                   onChange={(e) => setClaimedRelation(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  className="input-field mt-1"
                 >
                   <option value="">रिश्ता चुनें / Select</option>
                   {RELATIONS.map((r) => (
@@ -161,7 +161,7 @@ export default function JoinTreePage() {
               <button
                 onClick={handleSubmit}
                 disabled={!yourName || !claimedRelation}
-                className="w-full rounded-lg bg-gold px-6 py-3 font-semibold text-earth transition-colors hover:bg-gold/90 disabled:opacity-50"
+                className="btn-primary w-full"
               >
                 अनुरोध भेजें / Send Request
               </button>

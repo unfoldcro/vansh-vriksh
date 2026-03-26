@@ -111,26 +111,26 @@ export default function ListViewPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="खोजें — नाम, रिश्ता / Search..."
-          className="mt-4 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+          className="input-field mt-4"
         />
 
         {/* Filters */}
         <div className="mt-3 flex flex-wrap gap-2">
           <select value={sortBy} onChange={(e) => setSortBy(e.target.value as SortKey)}
-            className="rounded-lg border border-border-warm bg-bg-card px-3 py-1.5 text-xs text-earth">
+            className="rounded-input border border-border-warm bg-bg-card px-3 py-1.5 text-xs text-dark">
             <option value="generation">Sort: Generation</option>
             <option value="name">Sort: Name</option>
             <option value="dateAdded">Sort: Date Added</option>
           </select>
           <select value={filterGen} onChange={(e) => setFilterGen(e.target.value as FilterGen)}
-            className="rounded-lg border border-border-warm bg-bg-card px-3 py-1.5 text-xs text-earth">
+            className="rounded-input border border-border-warm bg-bg-card px-3 py-1.5 text-xs text-dark">
             <option value="all">All Generations</option>
             {Object.entries(genLabels).map(([k, v]) => (
               <option key={k} value={k}>Gen {k}: {v}</option>
             ))}
           </select>
           <select value={filterAlive} onChange={(e) => setFilterAlive(e.target.value as "all" | "living" | "deceased")}
-            className="rounded-lg border border-border-warm bg-bg-card px-3 py-1.5 text-xs text-earth">
+            className="rounded-input border border-border-warm bg-bg-card px-3 py-1.5 text-xs text-dark">
             <option value="all">All Status</option>
             <option value="living">Living</option>
             <option value="deceased">Deceased</option>
@@ -160,7 +160,7 @@ export default function ListViewPage() {
                       <p className="text-xs text-earth/50">
                         {rel?.labelHi || member.relation} | Gen {member.generationLevel >= 0 ? "+" : ""}{member.generationLevel}
                         {member.relationType !== "blood" && (
-                          <span className="ml-1 rounded bg-gold/20 px-1 text-[10px] text-gold">{member.relationType}</span>
+                          <span className="ml-1 rounded bg-accent/20 px-1 text-[10px] text-accent">{member.relationType}</span>
                         )}
                         {member.occupation && <span className="ml-2">{member.occupation}</span>}
                       </p>
@@ -189,7 +189,7 @@ export default function ListViewPage() {
 
         {/* Add Member FAB */}
         <Link href="/member/add"
-          className="fixed bottom-6 right-6 flex h-14 w-14 items-center justify-center rounded-full bg-gold text-2xl text-earth shadow-lg hover:bg-gold/90">
+          className="fixed bottom-6 right-6 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-2xl text-white shadow-lg hover:bg-accent-hover transition-colors">
           +
         </Link>
       </div>
@@ -197,7 +197,7 @@ export default function ListViewPage() {
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="w-full max-w-sm rounded-xl bg-bg-card p-6 shadow-xl">
+          <div className="w-full max-w-sm card p-6 shadow-xl">
             <h3 className="font-bold text-earth">क्या आप पक्के हैं? / Are you sure?</h3>
             <p className="mt-2 text-sm text-earth/60">
               30 दिन तक रीसायकल बिन से रिकवर कर सकते हैं।

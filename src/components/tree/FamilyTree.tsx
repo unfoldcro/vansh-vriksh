@@ -49,7 +49,7 @@ export default function FamilyTree({ members, onMemberTap }: FamilyTreeProps) {
             {/* Generation label */}
             <div className="mb-3 flex items-center gap-2">
               <div className="h-px flex-1 bg-border-warm" />
-              <span className="whitespace-nowrap rounded-full bg-bg-muted px-3 py-1 text-xs font-medium text-earth/50">
+              <span className="label-mono whitespace-nowrap rounded-full bg-accent/10 px-3 py-1 text-accent">
                 {GEN_LABELS[gen] || `Generation ${gen}`}
               </span>
               <div className="h-px flex-1 bg-border-warm" />
@@ -82,14 +82,14 @@ export default function FamilyTree({ members, onMemberTap }: FamilyTreeProps) {
                         onMemberTap?.(member);
                       }}
                       className={`w-36 rounded-lg border-2 p-3 text-center transition-all ${bgColor} ${
-                        isExpanded ? "ring-2 ring-gold shadow-md" : "hover:shadow-sm"
+                        isExpanded ? "ring-2 ring-accent shadow-md" : "hover:shadow-sm"
                       }`}
                     >
                       {/* Badges */}
                       <div className="flex justify-center gap-1">
                         {!member.alive && <span className="text-xs">🕊</span>}
                         {member.relationType === "adopted" && (
-                          <span className="rounded bg-gold/30 px-1 text-[9px] text-gold">दत्तक</span>
+                          <span className="rounded bg-accent/30 px-1 text-[9px] text-accent">दत्तक</span>
                         )}
                         {member.relationType === "step" && (
                           <span className="rounded bg-warning/30 px-1 text-[9px] text-warning">सौतेला</span>

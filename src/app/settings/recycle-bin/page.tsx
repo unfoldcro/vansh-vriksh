@@ -68,7 +68,7 @@ export default function RecycleBinPage() {
         </p>
 
         {items.length === 0 ? (
-          <div className="mt-8 rounded-xl border border-border-warm bg-bg-card p-8 text-center">
+          <div className="mt-8 card p-8 text-center">
             <p className="text-2xl">🗑</p>
             <p className="mt-2 text-earth/50">खाली है / Empty</p>
             <p className="mt-1 text-sm text-earth/40">
@@ -82,7 +82,7 @@ export default function RecycleBinPage() {
               return (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between rounded-lg border border-border-warm bg-bg-card p-4"
+                  className="card flex items-center justify-between p-4"
                 >
                   <div>
                     <p className="font-medium text-earth">{item.name || "Unknown"}</p>

@@ -221,7 +221,7 @@ export default function ProfilePage() {
           {step === "review" && "चरण 4/4 — समीक्षा / Step 4/4 — Review"}
         </p>
 
-        <div className="mt-6 rounded-xl border border-border-warm bg-bg-card p-6 shadow-sm">
+        <div className="mt-6 card p-6">
           {/* ─── STEP 1: Identity ─── */}
           {step === "identity" && (
             <div className="space-y-5">
@@ -235,7 +235,7 @@ export default function ProfilePage() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Rajesh Patil"
-                  className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  className="input-field mt-1"
                 />
               </label>
 
@@ -263,7 +263,7 @@ export default function ProfilePage() {
                   value={alsoKnownAs}
                   onChange={(e) => setAlsoKnownAs(e.target.value)}
                   placeholder="Raju, Babuji"
-                  className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  className="input-field mt-1"
                 />
               </label>
 
@@ -302,7 +302,7 @@ export default function ProfilePage() {
                       type="date"
                       value={dobExact}
                       onChange={(e) => setDobExact(e.target.value)}
-                      className="w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                      className="input-field"
                     />
                   )}
                   {dobType === "year" && (
@@ -320,7 +320,7 @@ export default function ProfilePage() {
                     <select
                       value={dobDecade}
                       onChange={(e) => setDobDecade(e.target.value)}
-                      className="w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                      className="input-field"
                     >
                       <option value="">दशक चुनें / Select Decade</option>
                       {DOB_DECADES.map((d) => (
@@ -332,7 +332,7 @@ export default function ProfilePage() {
                     <select
                       value={dobMarker}
                       onChange={(e) => setDobMarker(e.target.value)}
-                      className="w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                      className="input-field"
                     >
                       <option value="">संदर्भ चुनें / Select Marker</option>
                       {DOB_MARKERS.map((m) => (
@@ -363,7 +363,7 @@ export default function ProfilePage() {
                     setGotra("");
                   }}
                   placeholder="खोजें / Search gotra..."
-                  className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  className="input-field mt-1"
                 />
                 {gotraSearch && !gotra && (
                   <div className="mt-1 max-h-40 overflow-y-auto rounded-lg border border-border-warm bg-bg-card shadow-lg">
@@ -399,7 +399,7 @@ export default function ProfilePage() {
                   onChange={(e) => setKulDevta(e.target.value)}
                   list="kulDevtaList"
                   placeholder="Lord Shiva / भगवान शिव"
-                  className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  className="input-field mt-1"
                 />
                 <datalist id="kulDevtaList">
                   {COMMON_KUL_DEVTAS.map((d) => (
@@ -417,7 +417,7 @@ export default function ProfilePage() {
                   onChange={(e) => setKulDevi(e.target.value)}
                   list="kulDeviList"
                   placeholder="Maa Sharda / माँ शारदा"
-                  className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  className="input-field mt-1"
                 />
                 <datalist id="kulDeviList">
                   {COMMON_KUL_DEVIS.map((d) => (
@@ -434,7 +434,7 @@ export default function ProfilePage() {
                   value={jati}
                   onChange={(e) => setJati(e.target.value)}
                   placeholder="Optional"
-                  className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  className="input-field mt-1"
                 />
                 <p className="mt-1 text-xs text-earth/40">
                   यह निजी है, केवल आपका परिवार देख सकता है / Private — only your family sees this
@@ -448,7 +448,7 @@ export default function ProfilePage() {
                   <select
                     value={nakshatra}
                     onChange={(e) => setNakshatra(e.target.value)}
-                    className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                    className="input-field mt-1"
                   >
                     <option value="">चुनें / Select</option>
                     {NAKSHATRAS.map((n) => (
@@ -461,7 +461,7 @@ export default function ProfilePage() {
                   <select
                     value={rashi}
                     onChange={(e) => setRashi(e.target.value)}
-                    className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                    className="input-field mt-1"
                   >
                     <option value="">चुनें / Select</option>
                     {RASHIS.map((r) => (
@@ -482,7 +482,7 @@ export default function ProfilePage() {
                     <select
                       value={varna}
                       onChange={(e) => setVarna(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                      className="input-field mt-1"
                     >
                       <option value="">चुनें / Select</option>
                       {VARNAS.map((v) => (
@@ -497,7 +497,7 @@ export default function ProfilePage() {
                       value={shakha}
                       onChange={(e) => setShakha(e.target.value)}
                       placeholder="For Brahmin families"
-                      className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                      className="input-field mt-1"
                     />
                   </label>
                   <label className="block">
@@ -507,7 +507,7 @@ export default function ProfilePage() {
                       value={pravar}
                       onChange={(e) => setPravar(e.target.value)}
                       placeholder="Optional"
-                      className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                      className="input-field mt-1"
                     />
                   </label>
                 </div>
@@ -516,7 +516,7 @@ export default function ProfilePage() {
               <button
                 onClick={() => setStep("location")}
                 disabled={!fullName || !gotra}
-                className="w-full rounded-lg bg-gold px-6 py-3 font-semibold text-earth transition-colors hover:bg-gold/90 disabled:opacity-50"
+                className="btn-primary w-full"
               >
                 आगे बढ़ें / Next &rarr;
               </button>
@@ -535,7 +535,7 @@ export default function ProfilePage() {
                   value={village}
                   onChange={(e) => setVillage(e.target.value)}
                   placeholder="Doraha"
-                  className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  className="input-field mt-1"
                 />
               </label>
 
@@ -546,7 +546,7 @@ export default function ProfilePage() {
                   value={tehsil}
                   onChange={(e) => setTehsil(e.target.value)}
                   placeholder="Sehore"
-                  className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  className="input-field mt-1"
                 />
               </label>
 
@@ -557,7 +557,7 @@ export default function ProfilePage() {
                 <select
                   value={district}
                   onChange={(e) => setDistrict(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  className="input-field mt-1"
                 >
                   <option value="">जिला चुनें / Select District</option>
                   {(state === "Madhya Pradesh" ? MP_DISTRICTS : []).map((d) => (
@@ -582,7 +582,7 @@ export default function ProfilePage() {
                 <select
                   value={state}
                   onChange={(e) => setState(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  className="input-field mt-1"
                 >
                   {INDIAN_STATES.map((s) => (
                     <option key={s} value={s}>{s}</option>
@@ -603,7 +603,7 @@ export default function ProfilePage() {
                       value={currentCity}
                       onChange={(e) => setCurrentCity(e.target.value)}
                       placeholder="Indore"
-                      className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                      className="input-field mt-1"
                     />
                   </label>
                   <label className="block">
@@ -611,7 +611,7 @@ export default function ProfilePage() {
                     <select
                       value={currentState}
                       onChange={(e) => setCurrentState(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                      className="input-field mt-1"
                     >
                       <option value="">चुनें / Select</option>
                       {INDIAN_STATES.map((s) => (
@@ -626,7 +626,7 @@ export default function ProfilePage() {
                       value={migrationNote}
                       onChange={(e) => setMigrationNote(e.target.value)}
                       placeholder="Moved to Indore in 1998"
-                      className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                      className="input-field mt-1"
                     />
                   </label>
                 </div>
@@ -635,14 +635,14 @@ export default function ProfilePage() {
               <div className="flex gap-3">
                 <button
                   onClick={() => setStep("identity")}
-                  className="flex-1 rounded-lg border border-border-warm px-6 py-3 font-medium text-earth transition-colors hover:bg-bg-muted"
+                  className="btn-ghost flex-1"
                 >
                   &larr; पीछे / Back
                 </button>
                 <button
                   onClick={() => setStep("ritual")}
                   disabled={!village || !district}
-                  className="flex-1 rounded-lg bg-gold px-6 py-3 font-semibold text-earth transition-colors hover:bg-gold/90 disabled:opacity-50"
+                  className="btn-primary flex-1"
                 >
                   आगे / Next &rarr;
                 </button>
@@ -662,7 +662,7 @@ export default function ProfilePage() {
                 <select
                   value={teerthSthal}
                   onChange={(e) => setTeerthSthal(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  className="input-field mt-1"
                 >
                   <option value="">चुनें / Select</option>
                   {TEERTH_STHALS.map((t) => (
@@ -687,20 +687,20 @@ export default function ProfilePage() {
                   value={familyPriest}
                   onChange={(e) => setFamilyPriest(e.target.value)}
                   placeholder="Pandit Sharma ji"
-                  className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  className="input-field mt-1"
                 />
               </label>
 
               <div className="flex gap-3">
                 <button
                   onClick={() => setStep("location")}
-                  className="flex-1 rounded-lg border border-border-warm px-6 py-3 font-medium text-earth transition-colors hover:bg-bg-muted"
+                  className="btn-ghost flex-1"
                 >
                   &larr; पीछे / Back
                 </button>
                 <button
                   onClick={() => setStep("review")}
-                  className="flex-1 rounded-lg bg-gold px-6 py-3 font-semibold text-earth transition-colors hover:bg-gold/90"
+                  className="btn-primary flex-1"
                 >
                   समीक्षा / Review &rarr;
                 </button>
@@ -744,14 +744,14 @@ export default function ProfilePage() {
               <div className="flex gap-3">
                 <button
                   onClick={() => setStep("ritual")}
-                  className="flex-1 rounded-lg border border-border-warm px-6 py-3 font-medium text-earth transition-colors hover:bg-bg-muted"
+                  className="btn-ghost flex-1"
                 >
                   &larr; सुधारें / Edit
                 </button>
                 <button
                   onClick={handleSubmit}
                   disabled={saving}
-                  className="flex-1 rounded-lg bg-gold px-6 py-3 font-semibold text-earth transition-colors hover:bg-gold/90 disabled:opacity-50"
+                  className="btn-primary flex-1"
                 >
                   {saving ? "बना रहे हैं... / Creating..." : "वृक्ष बनाएं / Create Tree"}
                 </button>
@@ -784,7 +784,7 @@ export default function ProfilePage() {
             <div className="mt-5 space-y-2">
               <button
                 onClick={() => handleDuplicateChoice("join")}
-                className="w-full rounded-lg bg-gold px-4 py-3 font-semibold text-earth transition-colors hover:bg-gold/90"
+                className="btn-primary w-full"
               >
                 हां, यह मेरा परिवार है / Yes, this is my family
               </button>

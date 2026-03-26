@@ -45,7 +45,7 @@ function MemberCard({ member, isExpanded, onTap }: { member: DemoMember; isExpan
   return (
     <button
       onClick={onTap}
-      className={`relative rounded-lg border border-border-warm ${bgColor} px-3 py-2 text-left transition-all hover:shadow-md ${isExpanded ? "ring-2 ring-gold" : ""}`}
+      className={`relative rounded-card border border-border-warm ${bgColor} px-3 py-2 text-left transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${isExpanded ? "ring-2 ring-accent shadow-md" : ""}`}
       style={{ minWidth: "120px" }}
     >
       {member.deceased && (
@@ -56,7 +56,7 @@ function MemberCard({ member, isExpanded, onTap }: { member: DemoMember; isExpan
       {member.nee && (
         <div className="text-xs italic text-earth/50">née {member.nee}</div>
       )}
-      <div className="mt-0.5 text-xs text-gold">{member.relation}</div>
+      <div className="mt-0.5 text-xs font-medium text-accent">{member.relation}</div>
       {isExpanded && (
         <div className="mt-2 border-t border-border-warm pt-1.5 text-xs text-earth/60">
           {member.deceased ? "स्वर्गवासी" : "जीवित"} | {member.gender === "male" ? "पुरुष" : "महिला"}
@@ -79,7 +79,7 @@ export function DemoTree() {
           return (
             <div key={gen}>
               <div className="mb-2 flex justify-center">
-                <span className="rounded-full bg-gold/10 px-3 py-0.5 text-xs font-medium text-gold">
+                <span className="label-mono rounded-full bg-accent/10 px-3 py-1 text-accent">
                   {genLabels[gen]}
                 </span>
               </div>

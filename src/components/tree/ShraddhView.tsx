@@ -18,7 +18,7 @@ export default function ShraddhView({ members }: ShraddhViewProps) {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border-2 border-gold/30 bg-gold/5 p-4">
+      <div className="rounded-xl border-2 border-accent/30 bg-accent/5 p-4">
         <h2 className="text-center font-hindi text-lg font-bold text-earth">
           🙏 श्राद्ध सहायक / Shraddh Helper
         </h2>
@@ -41,7 +41,7 @@ export default function ShraddhView({ members }: ShraddhViewProps) {
           {paternalLine.map((member, i) => (
             <div
               key={member.id}
-              className="rounded-xl border-2 border-gold/40 bg-bg-card p-4 shadow-sm"
+              className="rounded-xl border-2 border-accent/40 bg-bg-card p-4 shadow-sm"
             >
               <div className="flex items-start justify-between">
                 <div>

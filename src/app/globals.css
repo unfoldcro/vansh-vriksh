@@ -3,18 +3,23 @@
 @tailwind utilities;
 
 :root {
-  --color-gold: #C9A84C;
-  --color-earth: #1A1207;
-  --color-green-seva: #2D5A1E;
-  --color-orange-seva: #D4740E;
-  --color-bg-primary: #FFFBF0;
+  --color-accent: #00C853;
+  --color-accent-hover: #00B848;
+  --color-dark: #0f1115;
+  --color-bg-primary: #f6f7f9;
   --color-bg-card: #FFFFFF;
-  --color-bg-muted: #F5F0E8;
-  --color-border-warm: #E8DCC8;
+  --color-bg-muted: #f0f1f3;
+  --color-border: #e7e9ee;
+  /* Aliases */
+  --color-gold: #00C853;
+  --color-earth: #0f1115;
+  --color-green-seva: #00C853;
+  --color-orange-seva: #FF6D00;
+  --color-border-warm: #e7e9ee;
 }
 
 body {
-  color: var(--color-earth);
+  color: var(--color-dark);
   background: var(--color-bg-primary);
 }
 
@@ -24,8 +29,92 @@ body {
   line-height: 1.625;
 }
 
+@layer components {
+  /* Primary button — pill, green, uppercase Space Mono */
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-btn bg-accent px-8 py-3 font-mono text-sm font-bold uppercase tracking-[1.5px] text-white transition-all duration-200;
+  }
+  .btn-primary:hover {
+    @apply shadow-[1px_5px_0px_0px_#00C853] bg-accent-hover;
+  }
+  .btn-primary:active {
+    @apply scale-[0.98];
+  }
+  .btn-primary:disabled {
+    @apply opacity-50 cursor-not-allowed shadow-none;
+  }
+
+  /* Secondary button — outline, dark border */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-card border-2 border-dark px-6 py-3 font-mono text-sm font-bold uppercase tracking-[1.5px] text-dark transition-all duration-200;
+  }
+  .btn-secondary:hover {
+    @apply bg-dark text-white;
+  }
+  .btn-secondary:active {
+    @apply scale-[0.98];
+  }
+
+  /* Ghost button — subtle */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-input border border-border-warm px-4 py-2 text-sm font-medium text-dark/60 transition-all duration-200;
+  }
+  .btn-ghost:hover {
+    @apply bg-bg-muted text-dark;
+  }
+
+  /* Card — clean, modern */
+  .card {
+    @apply rounded-card border border-border-warm bg-bg-card shadow-[0_1px_3px_rgba(15,17,21,0.02)] transition-all duration-200;
+  }
+  .card:hover {
+    @apply shadow-[0_4px_12px_rgba(15,17,21,0.06)] -translate-y-0.5;
+  }
+
+  /* Input field */
+  .input-field {
+    @apply w-full rounded-input border border-border-warm bg-bg-card px-4 py-3 text-dark placeholder:text-dark/30 transition-all duration-150 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20;
+  }
+
+  /* Mono label — for tags, step labels */
+  .label-mono {
+    @apply font-mono text-xs font-bold uppercase tracking-[1.5px];
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+/* Page entrance animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+/* Pulsing loading dot */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+.loading-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--color-accent);
+  animation: pulse-dot 1.2s ease-in-out infinite;
 }

@@ -39,7 +39,7 @@ export default function TreePreviewCard(props: TreePreviewCardProps) {
     matchScore,
   } = props;
   return (
-    <div className="rounded-xl border border-border-warm bg-bg-card p-5 transition-shadow hover:shadow-md">
+    <div className="card p-5">
       <div className="flex items-start justify-between">
         <h3 className="text-lg font-semibold text-earth">
           🌳 {familySurname} Family
@@ -67,13 +67,13 @@ export default function TreePreviewCard(props: TreePreviewCardProps) {
       <div className="mt-4 flex gap-2">
         <Link
           href={`/tree/${treeId}`}
-          className="rounded-lg border border-border-warm px-4 py-2 text-sm font-medium text-earth transition-colors hover:bg-bg-muted"
+          className="btn-ghost text-sm"
         >
           👁 View Tree
         </Link>
         <Link
           href={`/join/${treeId}`}
-          className="rounded-lg bg-gold px-4 py-2 text-sm font-medium text-earth transition-colors hover:bg-gold/90"
+          className="btn-primary px-4 py-2 text-xs"
         >
           🤝 Join This Tree
         </Link>

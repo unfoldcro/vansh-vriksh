@@ -44,7 +44,7 @@ export default function DiscoverPage() {
   return (
     <div className="min-h-screen bg-bg-primary px-4 py-8">
       <div className="mx-auto max-w-2xl">
-        <Link href="/dashboard" className="mb-6 inline-block text-sm text-earth/50 hover:text-gold">
+        <Link href="/dashboard" className="mb-6 inline-block text-sm text-earth/50 hover:text-accent">
           &larr; डैशबोर्ड / Dashboard
         </Link>
 
@@ -57,7 +57,7 @@ export default function DiscoverPage() {
 
         {userGotra && (
           <p className="mt-2 text-xs text-earth/40">
-            आपका गोत्र: <span className="font-medium text-gold">{userGotra}</span>
+            आपका गोत्र: <span className="font-medium text-accent">{userGotra}</span>
             {" "}— केवल समान गोत्र के वृक्ष दिखेंगे / Only same-gotra trees shown
           </p>
         )}
@@ -68,7 +68,7 @@ export default function DiscoverPage() {
             <select
               value={gotra}
               onChange={(e) => setGotra(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+              className="input-field mt-1"
             >
               <option value="">गोत्र चुनें</option>
               {GOTRAS.map((g) => <option key={g} value={g}>{g}</option>)}
@@ -80,7 +80,7 @@ export default function DiscoverPage() {
             <select
               value={district}
               onChange={(e) => setDistrict(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+              className="input-field mt-1"
             >
               <option value="">सभी जिले / All Districts</option>
               {MP_DISTRICTS.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -90,7 +90,7 @@ export default function DiscoverPage() {
           <button
             onClick={handleSearch}
             disabled={!gotra || searching}
-            className="w-full rounded-lg bg-gold px-6 py-3 font-semibold text-earth transition-colors hover:bg-gold/90 disabled:opacity-50"
+            className="btn-primary w-full"
           >
             {searching ? "खोज रहे हैं..." : "खोजें / Search"}
           </button>
@@ -106,7 +106,7 @@ export default function DiscoverPage() {
                 ))}
               </div>
             ) : (
-              <div className="rounded-xl border border-border-warm bg-bg-card p-6 text-center">
+              <div className="card p-6 text-center">
                 <p className="text-earth/50">कोई परिवार नहीं मिला / No families found</p>
                 <p className="mt-1 text-sm text-earth/40">
                   दूसरे जिले में खोजें या अपना वृक्ष बढ़ाएं

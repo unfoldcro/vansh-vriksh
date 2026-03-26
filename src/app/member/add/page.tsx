@@ -143,7 +143,7 @@ export default function AddMemberPage() {
           ))}
         </div>
 
-        <div className="mt-6 rounded-xl border border-border-warm bg-bg-card p-6 shadow-sm">
+        <div className="mt-6 card p-6">
 
           {/* ─── STEP 1: Relation Selection ─── */}
           {step === "relation" && (
@@ -165,10 +165,10 @@ export default function AddMemberPage() {
                           key={rel.key}
                           type="button"
                           onClick={() => setSelectedRelation(rel.key)}
-                          className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                          className={`rounded-btn px-3 py-1.5 text-xs font-medium transition-colors ${
                             selectedRelation === rel.key
-                              ? "bg-gold text-earth"
-                              : "border border-border-warm text-earth/60 hover:bg-bg-muted"
+                              ? "bg-accent text-white"
+                              : "border border-border-warm text-dark/60 hover:bg-bg-muted"
                           }`}
                         >
                           {rel.labelHi} / {rel.labelEn}
@@ -182,7 +182,7 @@ export default function AddMemberPage() {
               <button
                 onClick={() => setStep("details")}
                 disabled={!selectedRelation}
-                className="mt-4 w-full rounded-lg bg-gold px-6 py-3 font-semibold text-earth transition-colors hover:bg-gold/90 disabled:opacity-50"
+                className="btn-primary mt-4 w-full"
               >
                 आगे / Next &rarr;
               </button>
@@ -196,7 +196,7 @@ export default function AddMemberPage() {
                 <div className="rounded-lg bg-bg-muted px-3 py-2 text-sm text-earth/60">
                   रिश्ता: <span className="font-medium text-earth">{relationConfig.labelHi}</span> ({relationConfig.labelEn})
                   {relationConfig.relationType !== "blood" && (
-                    <span className="ml-2 rounded bg-gold/20 px-1.5 text-xs text-gold">{relationConfig.relationType}</span>
+                    <span className="ml-2 rounded bg-accent/20 px-1.5 text-xs text-accent">{relationConfig.relationType}</span>
                   )}
                 </div>
               )}
@@ -211,7 +211,7 @@ export default function AddMemberPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Suresh Patil"
-                  className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  className="mt-1 input-field"
                 />
               </label>
 
@@ -223,7 +223,7 @@ export default function AddMemberPage() {
                   value={nameHi}
                   onChange={(e) => setNameHi(e.target.value)}
                   placeholder="सुरेश पाटिल"
-                  className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 font-hindi text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  className="mt-1 input-field font-hindi"
                 />
               </label>
 
@@ -235,7 +235,7 @@ export default function AddMemberPage() {
                   value={alsoKnownAs}
                   onChange={(e) => setAlsoKnownAs(e.target.value)}
                   placeholder="Babuji, Dada"
-                  className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
+                  className="mt-1 input-field"
                 />
               </label>
 
@@ -254,7 +254,7 @@ export default function AddMemberPage() {
                       onClick={() => setGender(g.key)}
                       className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
                         gender === g.key
-                          ? `${g.bg} border-2 border-gold text-earth`
+                          ? `${g.bg} border-2 border-accent text-dark`
                           : "border border-border-warm text-earth/60"
                       }`}
                     >
@@ -308,10 +308,10 @@ export default function AddMemberPage() {
                       key={opt.key}
                       type="button"
                       onClick={() => setDobType(opt.key)}
-                      className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                      className={`rounded-btn px-3 py-1.5 text-xs font-medium transition-colors ${
                         dobType === opt.key
-                          ? "bg-gold text-earth"
-                          : "border border-border-warm text-earth/60"
+                          ? "bg-accent text-white"
+                          : "border border-border-warm text-dark/60"
                       }`}
                     >
                       {opt.label}
@@ -321,22 +321,22 @@ export default function AddMemberPage() {
                 <div className="mt-2">
                   {dobType === "exact" && (
                     <input type="date" value={dobExact} onChange={(e) => setDobExact(e.target.value)}
-                      className="w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20" />
+                      className="input-field" />
                   )}
                   {dobType === "year" && (
                     <input type="number" value={dobYear} onChange={(e) => setDobYear(e.target.value)} placeholder="1955"
-                      className="w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20" />
+                      className="input-field" />
                   )}
                   {dobType === "decade" && (
                     <select value={dobDecade} onChange={(e) => setDobDecade(e.target.value)}
-                      className="w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20">
+                      className="input-field">
                       <option value="">दशक चुनें</option>
                       {DOB_DECADES.map((d) => <option key={d} value={d}>{d}</option>)}
                     </select>
                   )}
                   {dobType === "marker" && (
                     <select value={dobMarker} onChange={(e) => setDobMarker(e.target.value)}
-                      className="w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20">
+                      className="input-field">
                       <option value="">संदर्भ चुनें</option>
                       {DOB_MARKERS.map((m) => <option key={m.value} value={m.value}>{m.label.hi}</option>)}
                     </select>
@@ -351,17 +351,17 @@ export default function AddMemberPage() {
                   <label className="block">
                     <span className="text-sm text-earth/60">मृत्यु वर्ष / Death Year</span>
                     <input type="number" value={deathYear} onChange={(e) => setDeathYear(e.target.value)} placeholder="2015"
-                      className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20" />
+                      className="mt-1 input-field" />
                   </label>
                   <label className="block">
                     <span className="text-sm text-earth/60">मृत्यु तिथि / Death Tithi</span>
                     <input type="text" value={deathTithi} onChange={(e) => setDeathTithi(e.target.value)} placeholder="Bhadrapada Krishna Amavasya"
-                      className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20" />
+                      className="mt-1 input-field" />
                   </label>
                   <label className="block">
                     <span className="text-sm text-earth/60">तीर्थ स्थल / Teerth Sthal</span>
                     <select value={teerthSthal} onChange={(e) => setTeerthSthal(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20">
+                      className="mt-1 input-field">
                       <option value="">चुनें</option>
                       {TEERTH_STHALS.map((t) => <option key={t} value={t}>{t}</option>)}
                     </select>
@@ -378,30 +378,30 @@ export default function AddMemberPage() {
                   <label className="block">
                     <span className="text-sm text-earth/60">व्यवसाय / Occupation</span>
                     <input type="text" value={occupation} onChange={(e) => setOccupation(e.target.value)} placeholder="Teacher, Farmer..."
-                      className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20" />
+                      className="mt-1 input-field" />
                   </label>
                   <label className="block">
                     <span className="text-sm text-earth/60">नोट्स / Notes</span>
                     <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} placeholder="Any special notes..."
-                      className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20" />
+                      className="mt-1 input-field" />
                   </label>
                   <label className="block">
                     <span className="text-sm text-earth/60">मौखिक इतिहास / Oral History</span>
                     <textarea value={oralHistory} onChange={(e) => setOralHistory(e.target.value)} rows={3} placeholder="Stories and memories from elders..."
-                      className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20" />
+                      className="mt-1 input-field" />
                   </label>
                 </div>
               </details>
 
               <div className="flex gap-3">
                 <button onClick={() => setStep("relation")}
-                  className="flex-1 rounded-lg border border-border-warm px-6 py-3 font-medium text-earth hover:bg-bg-muted">
+                  className="btn-ghost flex-1">
                   &larr; पीछे
                 </button>
                 <button
                   onClick={() => setStep(isSpouseRelation ? "marriage" : "confirm")}
                   disabled={!name}
-                  className="flex-1 rounded-lg bg-gold px-6 py-3 font-semibold text-earth hover:bg-gold/90 disabled:opacity-50">
+                  className="btn-primary flex-1">
                   आगे &rarr;
                 </button>
               </div>
@@ -416,19 +416,19 @@ export default function AddMemberPage() {
               <label className="block">
                 <span className="text-sm font-medium text-earth">जीवनसाथी का नाम / Spouse Name <span className="text-error">*</span></span>
                 <input type="text" value={spouseName || name} onChange={(e) => setSpouseName(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20" />
+                  className="mt-1 input-field" />
               </label>
 
               <label className="block">
                 <span className="text-sm font-medium text-earth">पिता का नाम / Father&apos;s Name <span className="text-error">*</span></span>
                 <input type="text" value={spouseFatherName} onChange={(e) => setSpouseFatherName(e.target.value)} placeholder="Father's name"
-                  className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20" />
+                  className="mt-1 input-field" />
               </label>
 
               <label className="block">
                 <span className="text-sm font-medium text-earth">गोत्र / Gotra <span className="text-error">*</span></span>
                 <select value={spouseGotra} onChange={(e) => setSpouseGotra(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20">
+                  className="mt-1 input-field">
                   <option value="">गोत्र चुनें</option>
                   {GOTRAS.map((g) => <option key={g} value={g}>{g}</option>)}
                 </select>
@@ -438,19 +438,19 @@ export default function AddMemberPage() {
                 <label className="block">
                   <span className="text-sm font-medium text-earth">गांव / Village</span>
                   <input type="text" value={spouseVillage} onChange={(e) => setSpouseVillage(e.target.value)}
-                    className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20" />
+                    className="mt-1 input-field" />
                 </label>
                 <label className="block">
                   <span className="text-sm font-medium text-earth">जिला / District</span>
                   <input type="text" value={spouseDistrict} onChange={(e) => setSpouseDistrict(e.target.value)}
-                    className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth placeholder:text-earth/30 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20" />
+                    className="mt-1 input-field" />
                 </label>
               </div>
 
               <label className="block">
                 <span className="text-sm font-medium text-earth">विवाह तिथि / Marriage Date</span>
                 <input type="date" value={marriageDate} onChange={(e) => setMarriageDate(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-border-warm bg-bg-card px-4 py-3 text-earth focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20" />
+                  className="mt-1 input-field" />
               </label>
 
               <div>
@@ -464,8 +464,8 @@ export default function AddMemberPage() {
                   ]).map((s) => (
                     <button key={s.key} type="button"
                       onClick={() => setMarriageStatus(s.key)}
-                      className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                        marriageStatus === s.key ? "bg-gold text-earth" : "border border-border-warm text-earth/60"
+                      className={`rounded-btn px-3 py-1.5 text-xs font-medium transition-colors ${
+                        marriageStatus === s.key ? "bg-accent text-white" : "border border-border-warm text-dark/60"
                       }`}>
                       {s.label}
                     </button>
@@ -475,12 +475,12 @@ export default function AddMemberPage() {
 
               <div className="flex gap-3">
                 <button onClick={() => setStep("details")}
-                  className="flex-1 rounded-lg border border-border-warm px-6 py-3 font-medium text-earth hover:bg-bg-muted">
+                  className="btn-ghost flex-1">
                   &larr; पीछे
                 </button>
                 <button onClick={() => setStep("confirm")}
                   disabled={!spouseGotra}
-                  className="flex-1 rounded-lg bg-gold px-6 py-3 font-semibold text-earth hover:bg-gold/90 disabled:opacity-50">
+                  className="btn-primary flex-1">
                   आगे &rarr;
                 </button>
               </div>
@@ -526,11 +526,11 @@ export default function AddMemberPage() {
 
               <div className="flex gap-3">
                 <button onClick={() => setStep(isSpouseRelation ? "marriage" : "details")}
-                  className="flex-1 rounded-lg border border-border-warm px-6 py-3 font-medium text-earth hover:bg-bg-muted">
+                  className="btn-ghost flex-1">
                   &larr; सुधारें
                 </button>
                 <button onClick={handleSave} disabled={saving}
-                  className="flex-1 rounded-lg bg-gold px-6 py-3 font-semibold text-earth hover:bg-gold/90 disabled:opacity-50">
+                  className="btn-primary flex-1">
                   {saving ? "जोड़ रहे हैं..." : "सदस्य जोड़ें / Add Member"}
                 </button>
               </div>
