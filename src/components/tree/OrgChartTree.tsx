@@ -71,7 +71,7 @@ function MemberNode({
       onClick={onTap}
       data-member-id={member.id}
       className={`
-        group relative w-[140px] rounded-card border-2 p-3 text-left
+        group relative w-[160px] shrink-0 rounded-card border-2 p-3 text-left
         transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5
         ${bgColor}
         ${isFocused
@@ -319,7 +319,7 @@ export default function OrgChartTree({
 
       {/* Tree container */}
       <div ref={scrollRef} className="overflow-x-auto pb-6">
-        <div className="mx-auto flex min-w-fit flex-col items-center gap-0 px-4">
+        <div className="flex min-w-fit flex-col items-center gap-0 px-8">
           {generations.map(([gen, genMembers], genIndex) => {
             const isCollapsed = collapsedGens.has(gen);
             const label = GEN_LABELS[gen];
@@ -368,7 +368,7 @@ export default function OrgChartTree({
                     <div
                       className="h-px bg-accent/20"
                       style={{
-                        width: `${Math.max((genMembers.length - 1) * 156, 100)}px`,
+                        width: `${Math.max((genMembers.length - 1) * 172, 100)}px`,
                       }}
                     />
                   </div>
@@ -377,7 +377,7 @@ export default function OrgChartTree({
                 {/* Member cards row */}
                 <div
                   ref={genMembers.some((m) => m.id === focusedMemberId) ? focusedRef : undefined}
-                  className="flex flex-wrap items-start justify-center gap-4"
+                  className="flex items-start justify-center gap-3"
                 >
                   {genMembers.map((member) => {
                     const isFocused = member.id === focusedMemberId;
