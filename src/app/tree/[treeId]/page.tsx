@@ -50,8 +50,8 @@ export default function TreeViewPage() {
     }
   }, [selfMemberId]);
 
+  // Load tree data once on mount (parallel fetch for speed)
   useEffect(() => {
-    // Demo tree — load instantly, no Firestore
     if (isDemoTreeId(treeId)) {
       setTreeMeta(DEMO_TREE);
       setMembers(DEMO_MEMBERS);
@@ -63,35 +63,39 @@ export default function TreeViewPage() {
 
     loadTree();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [treeId, user]);
+  }, [treeId]);
+
+  // Set owner status when user loads (separate from data fetch)
+  useEffect(() => {
+    if (user && user.treeId === treeId) {
+      setIsOwner(user.role === "owner");
+      setPasscodeUnlocked(true);
+    }
+  }, [user, treeId]);
 
   const loadTree = async () => {
     try {
-      const treeRes = await api.get<{ tree: TreeMetadata }>(`/api/trees/${treeId}`);
+      // Fetch tree metadata and members in parallel — halves wait time
+      const [treeRes, membersRes] = await Promise.all([
+        api.get<{ tree: TreeMetadata }>(`/api/trees/${treeId}`),
+        api.get<{ members: Member[] }>(`/api/trees/${treeId}/members`),
+      ]);
+
       const meta = treeRes.tree;
-      if (!meta) { setLoading(false); return; }
-      setTreeMeta(meta);
-
-      // Load existing passcode for share modal
-      if (meta.passcode) {
-        setSharePasscode(meta.passcode);
-        setUsePasscode(true);
-      }
-
-      if (user) {
-        if (user.treeId === treeId) {
-          setIsOwner(user.role === "owner");
-          // Owner bypasses passcode
-          setPasscodeUnlocked(true);
+      if (meta) {
+        setTreeMeta(meta);
+        if (meta.passcode) {
+          setSharePasscode(meta.passcode);
+          setUsePasscode(true);
         }
-        // Load members via API
-        const membersRes = await api.get<{ members: Member[] }>(`/api/trees/${treeId}/members`);
-        setMembers(membersRes.members || []);
-        const selfMember = (membersRes.members || []).find(
-          (m: Member) => m.relation === "self" || (m.relationGroup === "self" && m.generationLevel === 0)
-        );
-        if (selfMember) setSelfMemberId(selfMember.id);
       }
+
+      const membersList = membersRes.members || [];
+      setMembers(membersList);
+      const selfMember = membersList.find(
+        (m: Member) => m.relation === "self" || (m.relationGroup === "self" && m.generationLevel === 0)
+      );
+      if (selfMember) setSelfMemberId(selfMember.id);
     } catch (err) {
       console.error("Failed to load tree:", err);
     }
