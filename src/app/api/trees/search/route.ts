@@ -5,9 +5,16 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const q = searchParams.get("q") || "";
-    if (!q.trim()) return NextResponse.json({ trees: [] });
+    const district = searchParams.get("district") || "";
+    const gotra = searchParams.get("gotra") || "";
+    const village = searchParams.get("village") || "";
 
-    const results = await searchTrees(q);
+    // Need at least one search parameter
+    if (!q.trim() && !district.trim() && !gotra.trim() && !village.trim()) {
+      return NextResponse.json({ trees: [] });
+    }
+
+    const results = await searchTrees({ q, district, gotra, village });
     return NextResponse.json({ trees: results });
   } catch {
     return NextResponse.json({ error: "Search failed" }, { status: 500 });

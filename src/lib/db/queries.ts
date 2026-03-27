@@ -387,15 +387,30 @@ export async function discoverByGotra(gotra: string, district?: string) {
 }
 
 // ─── Search Trees ───
-export async function searchTrees(query: string) {
+export async function searchTrees(filters: {
+  q?: string;
+  district?: string;
+  gotra?: string;
+  village?: string;
+}) {
+  const conditions = [eq(trees.status, "active")];
+
+  if (filters.q?.trim()) {
+    conditions.push(ilike(trees.familySurname, `%${filters.q.trim()}%`));
+  }
+  if (filters.district?.trim()) {
+    conditions.push(ilike(trees.district, `%${filters.district.trim()}%`));
+  }
+  if (filters.gotra?.trim()) {
+    conditions.push(ilike(trees.gotra, `%${filters.gotra.trim()}%`));
+  }
+  if (filters.village?.trim()) {
+    conditions.push(ilike(trees.village, `%${filters.village.trim()}%`));
+  }
+
   return db
     .select()
     .from(trees)
-    .where(
-      and(
-        eq(trees.status, "active"),
-        ilike(trees.familySurname, `%${query}%`)
-      )
-    )
+    .where(and(...conditions))
     .limit(20);
 }
