@@ -70,11 +70,6 @@ export async function sendOtp(email: string): Promise<{ success: boolean; otp?: 
     return { success: false, error: "Failed to send OTP. Try again." };
   }
 
-  // If no email provider configured, return OTP in response so user can see it
-  if (!process.env.RESEND_API_KEY) {
-    return { success: true, otp: code };
-  }
-
   return { success: true };
 }
 

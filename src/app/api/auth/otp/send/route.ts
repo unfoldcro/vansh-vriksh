@@ -14,8 +14,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: result.error }, { status: 429 });
     }
 
-    // If no email provider, return OTP so the UI can display it
-    return NextResponse.json({ success: true, otp: result.otp });
+    return NextResponse.json({ success: true });
   } catch (err) {
     console.error("Send OTP error:", err);
     return NextResponse.json({ error: "Failed to send OTP" }, { status: 500 });

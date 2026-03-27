@@ -15,7 +15,7 @@ export default function VerifyPage() {
   const { user, loading: authLoading, refresh } = useAuth();
   const { t } = useTranslation();
 
-  const [tab, setTab] = useState<AuthTab>("otp");
+  const [tab, setTab] = useState<AuthTab>("password");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
@@ -55,10 +55,6 @@ export default function VerifyPage() {
         setError(data.error || "Failed to send OTP");
       } else {
         setOtpSent(true);
-        // If OTP returned (no email provider), auto-fill it
-        if (data.otp) {
-          setOtp(data.otp);
-        }
       }
     } catch {
       setError("Network error. Please try again.");
@@ -229,10 +225,10 @@ export default function VerifyPage() {
                 <>
                   <div className="rounded-card bg-success/10 px-4 py-3 text-center">
                     <p className="text-sm font-medium text-success">
-                      {otp.length === 6 ? "OTP auto-filled! Click verify." : `OTP sent to ${email}`}
+                      OTP sent to {email}
                     </p>
                     <p className="mt-1 text-xs text-dark/40">
-                      {otp.length === 6 ? "OTP has been auto-filled below" : "Check your email for the 6-digit code"}
+                      Check your email for the 6-digit code
                     </p>
                   </div>
                   <label className="block">
