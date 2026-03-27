@@ -32,21 +32,20 @@ export default function DashboardPage() {
       return;
     }
 
-    if (!authLoading && !user) {
-      router.push("/verify");
+    if (authLoading) return;
+
+    if (!user) {
+      router.replace("/verify");
       return;
     }
-    if (user) {
-      if (!user.treeId) {
-        router.replace("/profile");
-        return;
-      }
-      loadData(user.treeId);
-    }
-    // If auth resolved but no tree, stop showing loading
-    if (!authLoading && user && !user.treeId) {
+
+    if (!user.treeId) {
       setLoading(false);
+      router.replace("/profile");
+      return;
     }
+
+    loadData(user.treeId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading, router]);
 
