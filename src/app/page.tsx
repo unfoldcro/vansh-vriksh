@@ -11,11 +11,14 @@ import { LanguageToggle } from "@/components/layout/LanguageToggle";
 import { LanguageChooser } from "@/components/layout/LanguageChooser";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAuth } from "@/hooks/useAuth";
+import { AuthModal } from "@/components/ui/AuthModal";
 
 export default function Home() {
   const router = useRouter();
   const { t, setLang } = useTranslation();
   const { user } = useAuth();
+  const [showAuth, setShowAuth] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "register">("login");
 
   const handleEnterDemo = () => {
     localStorage.setItem("vansh-vriksh-demo", "true");
@@ -96,8 +99,16 @@ export default function Home() {
       {/* Language Chooser Modal — first visit only */}
       <LanguageChooser onSelect={(lang) => setLang(lang)} />
 
-      {/* Language Toggle */}
-      <div className="fixed right-4 top-4 z-50">
+      {/* Top bar: Login + Language Toggle */}
+      <div className="fixed right-4 top-4 z-50 flex items-center gap-2">
+        {!user && (
+          <button
+            onClick={() => { setAuthMode("login"); setShowAuth(true); }}
+            className="rounded-btn border border-accent/30 bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/20 transition-colors"
+          >
+            Login
+          </button>
+        )}
         <LanguageToggle />
       </div>
 
@@ -145,7 +156,7 @@ export default function Home() {
                 {t("nav.dashboard")}
               </Link>
             ) : (
-              <button onClick={() => router.push("/verify")} className="btn-primary group">
+              <button onClick={() => { setAuthMode("register"); setShowAuth(true); }} className="btn-primary group">
                 <span className="material-symbols-rounded icon-sm mr-2 transition-transform group-hover:scale-110">add_circle</span>
                 {t("landing.createTree")}
               </button>
@@ -598,7 +609,7 @@ export default function Home() {
                 {t("nav.dashboard")}
               </Link>
             ) : (
-              <button onClick={() => router.push("/verify")} className="btn-primary group">
+              <button onClick={() => { setAuthMode("register"); setShowAuth(true); }} className="btn-primary group">
                 <span className="material-symbols-rounded icon-sm mr-2">add_circle</span>
                 {t("landing.createTree")}
               </button>
@@ -636,6 +647,14 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* Auth Modal */}
+      {showAuth && (
+        <AuthModal
+          defaultMode={authMode}
+          onClose={() => setShowAuth(false)}
+        />
+      )}
     </div>
   );
 }

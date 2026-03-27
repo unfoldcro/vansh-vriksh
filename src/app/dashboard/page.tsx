@@ -8,6 +8,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { api } from "@/lib/api-client";
 import { OnboardingGuide } from "@/components/layout/OnboardingGuide";
 import { LanguageToggle } from "@/components/layout/LanguageToggle";
+import { MemberModal } from "@/components/ui/MemberModal";
 import { DEMO_MEMBERS, DEMO_TREE } from "@/lib/demo-data";
 import type { Member, TreeMetadata } from "@/types";
 
@@ -19,6 +20,7 @@ export default function DashboardPage() {
   const [treeMeta, setTreeMeta] = useState<TreeMetadata | null>(null);
   const [loading, setLoading] = useState(true);
   const [isDemo, setIsDemo] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
 
   useEffect(() => {
     // Check demo mode
@@ -220,7 +222,7 @@ export default function DashboardPage() {
           ) : (
             <div className="mt-3 space-y-2">
               {members.slice(0, 10).map((member) => (
-                <MemberCard key={member.id} member={member} />
+                <MemberCard key={member.id} member={member} onTap={setSelectedMember} />
               ))}
               {members.length > 10 && (
                 <Link
@@ -261,12 +263,29 @@ export default function DashboardPage() {
             </h2>
             <div className="mt-3 space-y-2">
               {deceasedMembers.map((member) => (
-                <MemberCard key={member.id} member={member} />
+                <MemberCard key={member.id} member={member} onTap={setSelectedMember} />
               ))}
             </div>
           </div>
         )}
       </div>
+
+      {/* Member Modal */}
+      {selectedMember && user?.treeId && (
+        <MemberModal
+          member={selectedMember}
+          treeId={user.treeId}
+          onClose={() => setSelectedMember(null)}
+          onUpdated={(updated) => {
+            setMembers((prev) => prev.map((m) => m.id === updated.id ? updated : m));
+            setSelectedMember(null);
+          }}
+          onDeleted={(id) => {
+            setMembers((prev) => prev.filter((m) => m.id !== id));
+            setSelectedMember(null);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -280,7 +299,7 @@ function StatCard({ label, value }: { label: string; value: number }) {
   );
 }
 
-function MemberCard({ member }: { member: Member }) {
+function MemberCard({ member, onTap }: { member: Member; onTap: (m: Member) => void }) {
   const genderBg =
     member.gender === "male"
       ? "bg-card-male"
@@ -289,9 +308,9 @@ function MemberCard({ member }: { member: Member }) {
         : "bg-card-other";
 
   return (
-    <Link
-      href={`/member/${member.id}`}
-      className={`flex items-center gap-3 rounded-card border border-border-warm px-4 py-3 transition-all hover:border-accent hover:-translate-y-0.5 ${
+    <button
+      onClick={() => onTap(member)}
+      className={`w-full text-left flex items-center gap-3 rounded-card border border-border-warm px-4 py-3 transition-all hover:border-accent hover:-translate-y-0.5 ${
         !member.alive ? "bg-card-deceased/30" : genderBg + "/30"
       }`}
     >
@@ -310,6 +329,6 @@ function MemberCard({ member }: { member: Member }) {
           )}
         </p>
       </div>
-    </Link>
+    </button>
   );
 }
