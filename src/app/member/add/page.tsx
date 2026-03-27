@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/hooks/useTranslation";
+import { LanguageToggle } from "@/components/layout/LanguageToggle";
 import { api } from "@/lib/api-client";
 import { isDemoMode } from "@/lib/demo-data";
 import { RELATION_GROUPS, RELATIONS, getRelationConfig } from "@/lib/relations";
@@ -21,7 +22,9 @@ export default function AddMemberPage() {
   const [saving, setSaving] = useState(false);
 
   // Relation
+  const [selectedGroup, setSelectedGroup] = useState("");
   const [selectedRelation, setSelectedRelation] = useState("");
+  const [relationSearch, setRelationSearch] = useState("");
 
   // Member details
   const [name, setName] = useState("");
@@ -152,6 +155,11 @@ export default function AddMemberPage() {
 
   return (
     <div className="min-h-screen bg-bg-primary px-4 py-8">
+      {/* Language Toggle */}
+      <div className="fixed right-4 top-4 z-50">
+        <LanguageToggle />
+      </div>
+
       <div className="mx-auto max-w-2xl">
         <Link href="/dashboard" className="mb-6 inline-flex items-center gap-1 text-sm text-dark/50 hover:text-accent">
           <span className="material-symbols-rounded" style={{ fontSize: "16px" }}>arrow_back</span>
@@ -172,39 +180,113 @@ export default function AddMemberPage() {
         <div className="mt-6 card p-6">
 
           {/* ─── STEP 1: Relation Selection ─── */}
-          {step === "relation" && (
-            <div className="space-y-4">
-              <p className="text-sm text-dark/60">{t("member.selectRelation")}</p>
+          {step === "relation" && (() => {
+            const groupRelations = selectedGroup
+              ? RELATIONS.filter((r) => r.group === selectedGroup)
+              : [];
+            const filteredRelations = relationSearch.trim()
+              ? groupRelations.filter((r) =>
+                  r.labelEn.toLowerCase().includes(relationSearch.toLowerCase()) ||
+                  r.labelHi.includes(relationSearch)
+                )
+              : groupRelations;
 
-              {RELATION_GROUPS.map((group) => {
-                const relations = RELATIONS.filter((r) => r.group === group.key);
-                return (
-                  <div key={group.key}>
-                    <h3 className="mb-2 text-sm font-semibold text-dark/70">
-                      {getGroupLabel(group)}
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {relations.map((rel) => (
-                        <button key={rel.key} type="button"
-                          onClick={() => setSelectedRelation(rel.key)}
-                          className={`rounded-btn px-3 py-1.5 text-xs font-medium transition-colors ${
-                            selectedRelation === rel.key
-                              ? "bg-accent text-white"
-                              : "border border-border-warm text-dark/60 hover:bg-bg-muted"
-                          }`}>
-                          {getRelLabel(rel)}
-                        </button>
-                      ))}
+            return (
+              <div className="space-y-5">
+                <p className="text-sm text-dark/60">{t("member.selectRelation")}</p>
+
+                {/* Step 1a: Select group */}
+                <div>
+                  <span className="text-sm font-medium text-earth">
+                    {isHindiMode ? "वर्ग चुनें" : "Select Category"}
+                  </span>
+                  <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {RELATION_GROUPS.map((group) => (
+                      <button
+                        key={group.key}
+                        type="button"
+                        onClick={() => { setSelectedGroup(group.key); setSelectedRelation(""); setRelationSearch(""); }}
+                        className={`rounded-card border px-3 py-3 text-left transition-colors ${
+                          selectedGroup === group.key
+                            ? "border-accent bg-accent/10"
+                            : "border-border-warm hover:bg-bg-muted"
+                        }`}
+                      >
+                        <div className={`text-sm font-semibold ${selectedGroup === group.key ? "text-accent" : "text-earth"}`}>
+                          {getGroupLabel(group)}
+                        </div>
+                        <div className="text-xs text-dark/40 mt-0.5">
+                          {RELATIONS.filter((r) => r.group === group.key).length} {isHindiMode ? "रिश्ते" : "relations"}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Step 1b: Select relation from group */}
+                {selectedGroup && (
+                  <div>
+                    <span className="text-sm font-medium text-earth">
+                      {isHindiMode ? "रिश्ता चुनें" : "Select Relation"}
+                    </span>
+
+                    {/* Search */}
+                    <div className="mt-2 relative">
+                      <span className="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-dark/30" style={{ fontSize: "18px" }}>search</span>
+                      <input
+                        type="text"
+                        value={relationSearch}
+                        onChange={(e) => setRelationSearch(e.target.value)}
+                        placeholder={isHindiMode ? "खोजें... (जैसे पिता, दादा)" : "Search... (e.g. Father, Uncle)"}
+                        className="input-field w-full pl-9"
+                      />
+                    </div>
+
+                    {/* Relation list */}
+                    <div className="mt-2 max-h-60 overflow-y-auto rounded-card border border-border-warm divide-y divide-border-warm">
+                      {filteredRelations.length === 0 ? (
+                        <div className="px-4 py-3 text-sm text-dark/40 text-center">
+                          {isHindiMode ? "कोई रिश्ता नहीं मिला" : "No relation found"}
+                        </div>
+                      ) : (
+                        filteredRelations.map((rel) => (
+                          <button
+                            key={rel.key}
+                            type="button"
+                            onClick={() => setSelectedRelation(rel.key)}
+                            className={`w-full px-4 py-3 text-left transition-colors flex items-center justify-between ${
+                              selectedRelation === rel.key
+                                ? "bg-accent/10"
+                                : "hover:bg-bg-muted"
+                            }`}
+                          >
+                            <div>
+                              <span className={`text-sm font-medium ${selectedRelation === rel.key ? "text-accent" : "text-earth"}`}>
+                                {isHindiMode ? rel.labelHi : rel.labelEn}
+                              </span>
+                              <span className="ml-2 text-xs text-dark/35">
+                                {isHindiMode ? rel.labelEn : rel.labelHi}
+                              </span>
+                            </div>
+                            {rel.relationType !== "blood" && (
+                              <span className="rounded bg-accent/15 px-1.5 py-0.5 text-[10px] text-accent">{rel.relationType}</span>
+                            )}
+                            {selectedRelation === rel.key && (
+                              <span className="material-symbols-rounded text-accent" style={{ fontSize: "18px" }}>check_circle</span>
+                            )}
+                          </button>
+                        ))
+                      )}
                     </div>
                   </div>
-                );
-              })}
+                )}
 
-              <button onClick={() => setStep("details")} disabled={!selectedRelation} className="btn-primary mt-4 w-full">
-                {t("common.next")} &rarr;
-              </button>
-            </div>
-          )}
+                <button onClick={() => setStep("details")} disabled={!selectedRelation} className="btn-primary mt-4 w-full">
+                  {t("common.next")} &rarr;
+                </button>
+              </div>
+            );
+          })()}
 
           {/* ─── STEP 2: Member Details ─── */}
           {step === "details" && (
