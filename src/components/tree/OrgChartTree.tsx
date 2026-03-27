@@ -369,12 +369,13 @@ const OrgChartTree = forwardRef<OrgChartTreeHandle, OrgChartTreeProps>(function 
     setCollapsedGens(toCollapse);
   }, [focusedMemberId, focusedGen, generations, isDemo]);
 
-  // Scroll to focused member
+  // Scroll to focused member (skip for demo — it scrolls the whole landing page)
   useEffect(() => {
+    if (isDemo) return;
     if (focusedRef.current) {
       focusedRef.current.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
     }
-  }, [focusedMemberId]);
+  }, [focusedMemberId, isDemo]);
 
   // Expose imperative methods via ref
   useImperativeHandle(ref, () => ({
