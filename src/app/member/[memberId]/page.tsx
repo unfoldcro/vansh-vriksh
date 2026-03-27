@@ -443,7 +443,7 @@ export default function MemberDetailPage() {
                   <span className="text-sm font-medium text-dark">{isHindi ? "ऐतिहासिक संदर्भ" : "Historical Marker"}</span>
                   <select value={dobMarker} onChange={(e) => setDobMarker(e.target.value)} className="input-field mt-1">
                     <option value="">--</option>
-                    {DOB_MARKERS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+                    {DOB_MARKERS.map((m) => <option key={m.value} value={m.value}>{isHindi ? m.label.hi : m.label.en}</option>)}
                   </select>
                 </label>
               )}

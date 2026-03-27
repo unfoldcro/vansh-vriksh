@@ -472,7 +472,7 @@ export default function AddMemberPage() {
                   <span className="material-symbols-rounded" style={{ fontSize: "16px" }}>arrow_back</span> {t("common.back")}
                 </button>
                 <button onClick={() => setStep(isSpouseRelation ? "marriage" : "confirm")}
-                  disabled={!primaryName} className="btn-primary flex-1">
+                  disabled={!name && !nameHi} className="btn-primary flex-1">
                   {t("common.next")} &rarr;
                 </button>
               </div>
