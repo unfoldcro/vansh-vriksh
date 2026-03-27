@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { hashPassword } from "@/lib/auth/password";
-import { setAuthCookie } from "@/lib/auth/jwt";
 import { createUser, getUserByEmail } from "@/lib/db/queries";
+import { db } from "@/lib/db/index";
+import { emailVerifications } from "@/lib/db/schema";
+import { sendVerificationEmail } from "@/lib/email";
 
 export async function POST(req: Request) {
   try {
@@ -24,7 +26,7 @@ export async function POST(req: Request) {
     const passwordHash = await hashPassword(password);
     const id = crypto.randomUUID();
 
-    const user = await createUser({
+    await createUser({
       id,
       email,
       passwordHash,
@@ -32,14 +34,28 @@ export async function POST(req: Request) {
       authMethod: "password",
     });
 
-    await setAuthCookie({
-      sub: user.id,
-      email: user.email!,
-      role: user.role || "viewer",
-      fullName: user.fullName,
+    // Generate verification token and send email
+    const token = crypto.randomUUID();
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    await db.insert(emailVerifications).values({
+      email,
+      token,
+      expiresAt,
     });
 
-    return NextResponse.json({ user: { id: user.id, email: user.email, fullName: user.fullName } });
+    try {
+      await sendVerificationEmail(email, token);
+    } catch (emailErr) {
+      console.error("Failed to send verification email:", emailErr);
+      // Still return success — user was created, they can request resend
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Account created. Please check your email to verify.",
+      needsVerification: true,
+    });
   } catch (err) {
     console.error("Register error:", err);
     return NextResponse.json({ error: "Registration failed" }, { status: 500 });

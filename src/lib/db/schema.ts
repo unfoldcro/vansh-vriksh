@@ -49,11 +49,21 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
-// ─── OTP Codes ───
-export const otpCodes = pgTable("otp_codes", {
+// ─── Email Verifications ───
+export const emailVerifications = pgTable("email_verifications", {
   id: serial("id").primaryKey(),
   email: text("email").notNull(),
-  code: text("code").notNull(),
+  token: text("token").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  used: boolean("used").default(false),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+// ─── Password Resets ───
+export const passwordResets = pgTable("password_resets", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull(),
+  token: text("token").notNull(),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   used: boolean("used").default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),

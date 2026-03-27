@@ -7,27 +7,20 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/hooks/useTranslation";
 import { LanguageToggle } from "@/components/layout/LanguageToggle";
 
-type AuthTab = "otp" | "password";
-type PasswordMode = "login" | "register";
+type AuthMode = "login" | "register" | "forgot";
 
 export default function VerifyPage() {
   const router = useRouter();
   const { user, loading: authLoading, refresh } = useAuth();
   const { t } = useTranslation();
 
-  const [tab, setTab] = useState<AuthTab>("password");
+  const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [verifying, setVerifying] = useState(false);
-  const [error, setError] = useState("");
-
-  // Password tab state
-  const [passwordMode, setPasswordMode] = useState<PasswordMode>("login");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   // If already logged in, redirect
   useEffect(() => {
@@ -40,90 +33,122 @@ export default function VerifyPage() {
     }
   }, [user, authLoading, router]);
 
-  // ─── OTP Flow ───
-  const handleSendOtp = async () => {
+  const handleLogin = async () => {
     setError("");
-    setSending(true);
+    setSuccess("");
+    setLoading(true);
     try {
-      const res = await fetch("/api/auth/otp/send", {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (data.needsVerification) {
+          setError("Email not verified. Check your inbox or resend verification.");
+          return;
+        }
+        setError(data.error || "Login failed");
+        return;
+      }
+
+      await refresh();
+      if (!data.user?.treeId) {
+        router.push("/profile");
+      } else {
+        router.push("/dashboard");
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegister = async () => {
+    setError("");
+    setSuccess("");
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password, fullName }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Registration failed");
+        return;
+      }
+
+      setSuccess("Account created! Please check your email to verify. / अकाउंट बनाया गया! कृपया ईमेल सत्यापित करें।");
+      setMode("login");
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    setError("");
+    setSuccess("");
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
       const data = await res.json();
+
       if (!res.ok) {
-        setError(data.error || "Failed to send OTP");
-      } else {
-        setOtpSent(true);
+        setError(data.error || "Failed to send reset email");
+        return;
       }
+
+      setSuccess("Password reset link sent to your email. / पासवर्ड रीसेट लिंक ईमेल पर भेजा गया।");
     } catch {
       setError("Network error. Please try again.");
     } finally {
-      setSending(false);
+      setLoading(false);
     }
   };
 
-  const handleVerifyOtp = async () => {
+  const handleResendVerification = async () => {
     setError("");
-    setVerifying(true);
+    setSuccess("");
+    setLoading(true);
     try {
-      const res = await fetch("/api/auth/otp/verify", {
+      const res = await fetch("/api/auth/resend-verification", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ email, code: otp }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Invalid OTP");
-        setVerifying(false);
-      } else {
-        await refresh();
-        if (data.isNewUser || !data.user?.treeId) {
-          router.push("/profile");
-        } else {
-          router.push("/dashboard");
-        }
-      }
-    } catch {
-      setError("Verification failed. Please try again.");
-      setVerifying(false);
-    }
-  };
-
-  // ─── Password Flow ───
-  const handlePasswordSubmit = async () => {
-    setError("");
-    setPasswordLoading(true);
-    try {
-      const endpoint = passwordMode === "register" ? "/api/auth/register" : "/api/auth/login";
-      const body = passwordMode === "register"
-        ? { email, password, fullName }
-        : { email, password };
-
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(body),
+        body: JSON.stringify({ email }),
       });
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Authentication failed");
-        setPasswordLoading(false);
-      } else {
-        await refresh();
-        if (!data.user?.treeId) {
-          router.push("/profile");
-        } else {
-          router.push("/dashboard");
-        }
+        setError(data.error || "Failed to resend verification");
+        return;
       }
+
+      setSuccess("Verification email sent! Check your inbox. / सत्यापन ईमेल भेजा गया!");
     } catch {
       setError("Network error. Please try again.");
-      setPasswordLoading(false);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleSubmit = () => {
+    if (mode === "login") handleLogin();
+    else if (mode === "register") handleRegister();
+    else if (mode === "forgot") handleForgotPassword();
   };
 
   if (authLoading) {
@@ -157,170 +182,81 @@ export default function VerifyPage() {
 
         <div className="card p-6">
           <h1 className="font-heading text-2xl font-bold text-dark">
-            {t("auth.verifyTitle")}
+            {mode === "forgot" ? "Reset Password / पासवर्ड रीसेट" : t("auth.verifyTitle")}
           </h1>
-          <p className="mt-1 text-sm text-dark/40">{t("auth.verifySubtitle")}</p>
+          <p className="mt-1 text-sm text-dark/40">
+            {mode === "forgot"
+              ? "Enter your email to receive a reset link / रीसेट लिंक पाने के लिए ईमेल डालें"
+              : mode === "register"
+                ? "Create your account / अपना अकाउंट बनाएं"
+                : "Login to continue / लॉगिन करें"}
+          </p>
 
-          {/* Tabs */}
-          <div className="mt-5 flex rounded-lg border border-border-warm p-1">
-            <button
-              onClick={() => { setTab("otp"); setError(""); }}
-              className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                tab === "otp"
-                  ? "bg-accent text-white"
-                  : "text-dark/60 hover:text-dark"
-              }`}
-            >
-              Email OTP
-            </button>
-            <button
-              onClick={() => { setTab("password"); setError(""); }}
-              className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                tab === "password"
-                  ? "bg-accent text-white"
-                  : "text-dark/60 hover:text-dark"
-              }`}
-            >
-              ID / Password
-            </button>
-          </div>
-
-          {/* Error */}
-          {error && (
-            <p className="mt-3 rounded-lg bg-error/10 px-3 py-2 text-sm text-error">
-              {error}
-            </p>
-          )}
-
-          {/* ─── OTP Tab ─── */}
-          {tab === "otp" && (
-            <div className="mt-5 space-y-4">
-              {!otpSent ? (
-                <>
-                  <label className="block">
-                    <span className="text-sm font-medium text-dark">
-                      {t("auth.enterEmail")}
-                    </span>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@example.com"
-                      className="input-field mt-1"
-                      onKeyDown={(e) =>
-                        e.key === "Enter" && email.includes("@") && handleSendOtp()
-                      }
-                    />
-                  </label>
-                  <p className="text-xs text-dark/40">{t("auth.emailNote")}</p>
-                  <button
-                    onClick={handleSendOtp}
-                    disabled={sending || !email.includes("@")}
-                    className="btn-primary w-full"
-                  >
-                    {sending ? t("auth.sending") : t("auth.sendOtp")}
-                  </button>
-                </>
-              ) : (
-                <>
-                  <div className="rounded-card bg-success/10 px-4 py-3 text-center">
-                    <p className="text-sm font-medium text-success">
-                      OTP sent to {email}
-                    </p>
-                    <p className="mt-1 text-xs text-dark/40">
-                      Check your email for the 6-digit code
-                    </p>
-                  </div>
-                  <label className="block">
-                    <span className="text-sm font-medium text-dark">
-                      Enter OTP / OTP दर्ज करें
-                    </span>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={6}
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                      placeholder="123456"
-                      className="input-field mt-1 text-center text-2xl tracking-[0.5em]"
-                      onKeyDown={(e) =>
-                        e.key === "Enter" && otp.length === 6 && handleVerifyOtp()
-                      }
-                    />
-                  </label>
-                  <button
-                    onClick={handleVerifyOtp}
-                    disabled={verifying || otp.length !== 6}
-                    className="btn-primary w-full"
-                  >
-                    {verifying ? t("auth.verifying") : t("auth.verify")}
-                  </button>
-                  <button
-                    onClick={() => { setOtpSent(false); setOtp(""); setError(""); }}
-                    className="btn-ghost w-full text-sm"
-                  >
-                    {t("auth.resendOtp")}
-                  </button>
-                </>
+          {/* Success message */}
+          {success && (
+            <div className="mt-3 rounded-lg bg-success/10 px-3 py-2 text-sm text-success">
+              {success}
+              {success.includes("verify") && (
+                <button
+                  onClick={handleResendVerification}
+                  disabled={loading}
+                  className="ml-2 underline hover:no-underline"
+                >
+                  Resend
+                </button>
               )}
             </div>
           )}
 
-          {/* ─── Password Tab ─── */}
-          {tab === "password" && (
-            <div className="mt-5 space-y-4">
-              {/* Toggle login/register */}
-              <div className="flex rounded-md border border-border-warm p-0.5">
+          {/* Error */}
+          {error && (
+            <div className="mt-3 rounded-lg bg-error/10 px-3 py-2 text-sm text-error">
+              {error}
+              {error.includes("not verified") && (
                 <button
-                  onClick={() => { setPasswordMode("login"); setError(""); }}
-                  className={`flex-1 rounded px-2 py-1.5 text-xs font-medium transition-colors ${
-                    passwordMode === "login"
-                      ? "bg-earth text-white"
-                      : "text-dark/50 hover:text-dark"
-                  }`}
+                  onClick={handleResendVerification}
+                  disabled={loading}
+                  className="ml-2 underline hover:no-underline"
                 >
-                  Login
+                  Resend Verification
                 </button>
-                <button
-                  onClick={() => { setPasswordMode("register"); setError(""); }}
-                  className={`flex-1 rounded px-2 py-1.5 text-xs font-medium transition-colors ${
-                    passwordMode === "register"
-                      ? "bg-earth text-white"
-                      : "text-dark/50 hover:text-dark"
-                  }`}
-                >
-                  Register
-                </button>
-              </div>
-
-              {passwordMode === "register" && (
-                <label className="block">
-                  <span className="text-sm font-medium text-dark">
-                    Full Name / पूरा नाम
-                  </span>
-                  <input
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Rajesh Patil"
-                    className="input-field mt-1"
-                  />
-                </label>
               )}
+            </div>
+          )}
 
+          <div className="mt-5 space-y-4">
+            {/* Full Name — only for register */}
+            {mode === "register" && (
               <label className="block">
                 <span className="text-sm font-medium text-dark">
-                  {t("auth.enterEmail")}
+                  Full Name / पूरा नाम
                 </span>
                 <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Rajesh Patil"
                   className="input-field mt-1"
                 />
               </label>
+            )}
 
+            {/* Email */}
+            <label className="block">
+              <span className="text-sm font-medium text-dark">
+                {t("auth.enterEmail")}
+              </span>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="input-field mt-1"
+              />
+            </label>
+
+            {/* Password — not for forgot */}
+            {mode !== "forgot" && (
               <label className="block">
                 <span className="text-sm font-medium text-dark">
                   Password / पासवर्ड
@@ -329,56 +265,70 @@ export default function VerifyPage() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder={passwordMode === "register" ? "Min 6 characters" : "Enter password"}
+                  placeholder={mode === "register" ? "Min 6 characters" : "Enter password"}
                   className="input-field mt-1"
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" && email && password) handlePasswordSubmit();
+                    if (e.key === "Enter" && email && password) handleSubmit();
                   }}
                 />
               </label>
+            )}
 
-              <button
-                onClick={handlePasswordSubmit}
-                disabled={
-                  passwordLoading ||
-                  !email.includes("@") ||
-                  !password ||
-                  (passwordMode === "register" && !fullName)
-                }
-                className="btn-primary w-full"
-              >
-                {passwordLoading
-                  ? t("common.loading")
-                  : passwordMode === "register"
-                    ? "Register / रजिस्टर करें"
+            {/* Submit button */}
+            <button
+              onClick={handleSubmit}
+              disabled={
+                loading ||
+                !email.includes("@") ||
+                (mode !== "forgot" && !password) ||
+                (mode === "register" && !fullName)
+              }
+              className="btn-primary w-full"
+            >
+              {loading
+                ? t("common.loading")
+                : mode === "register"
+                  ? "Register / रजिस्टर करें"
+                  : mode === "forgot"
+                    ? "Send Reset Link / रीसेट लिंक भेजें"
                     : "Login / लॉगिन करें"}
-              </button>
+            </button>
 
-              <p className="text-center text-xs text-dark/40">
-                {passwordMode === "login" ? (
-                  <>
-                    No account?{" "}
-                    <button
-                      onClick={() => { setPasswordMode("register"); setError(""); }}
-                      className="text-accent hover:underline"
-                    >
-                      Register here
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    Already have an account?{" "}
-                    <button
-                      onClick={() => { setPasswordMode("login"); setError(""); }}
-                      className="text-accent hover:underline"
-                    >
-                      Login here
-                    </button>
-                  </>
-                )}
-              </p>
-            </div>
-          )}
+            {/* Forgot password link — only on login */}
+            {mode === "login" && (
+              <button
+                onClick={() => { setMode("forgot"); setError(""); setSuccess(""); }}
+                className="w-full text-center text-xs text-accent hover:underline"
+              >
+                Forgot password? / पासवर्ड भूल गए?
+              </button>
+            )}
+
+            {/* Mode switchers */}
+            <p className="text-center text-xs text-dark/40">
+              {mode === "login" ? (
+                <>
+                  No account?{" "}
+                  <button
+                    onClick={() => { setMode("register"); setError(""); setSuccess(""); }}
+                    className="text-accent hover:underline"
+                  >
+                    Register here / यहां रजिस्टर करें
+                  </button>
+                </>
+              ) : (
+                <>
+                  Already have an account?{" "}
+                  <button
+                    onClick={() => { setMode("login"); setError(""); setSuccess(""); }}
+                    className="text-accent hover:underline"
+                  >
+                    Login here / यहां लॉगिन करें
+                  </button>
+                </>
+              )}
+            </p>
+          </div>
         </div>
 
         {/* Guide link */}

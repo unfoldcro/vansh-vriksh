@@ -36,7 +36,7 @@ export async function createUser(data: {
       passwordHash: data.passwordHash || null,
       fullName: data.fullName,
       authMethod: data.authMethod || "email",
-      verified: true,
+      verified: false,
     })
     .returning();
   return user;

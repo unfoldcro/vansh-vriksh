@@ -20,6 +20,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Account is suspended" }, { status: 403 });
     }
 
+    if (!user.verified) {
+      return NextResponse.json({
+        error: "Email not verified. Please check your email or request a new verification link.",
+        needsVerification: true,
+        email: user.email,
+      }, { status: 403 });
+    }
+
     const valid = await verifyPassword(password, user.passwordHash);
     if (!valid) {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });

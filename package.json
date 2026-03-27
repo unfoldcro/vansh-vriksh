@@ -14,13 +14,14 @@
     "drizzle-orm": "^0.45.1",
     "jose": "^6.2.2",
     "next": "14.2.35",
+    "nodemailer": "^8.0.4",
     "react": "^18",
-    "react-dom": "^18",
-    "resend": "^6.9.4"
+    "react-dom": "^18"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
+    "@types/nodemailer": "^7.0.11",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "drizzle-kit": "^0.31.10",
