@@ -11,7 +11,7 @@ type AuthMode = "login" | "register" | "forgot";
 
 export default function VerifyPage() {
   const router = useRouter();
-  const { user, loading: authLoading, refresh } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { t } = useTranslation();
 
   const [mode, setMode] = useState<AuthMode>("login");
@@ -55,7 +55,6 @@ export default function VerifyPage() {
         return;
       }
 
-      await refresh();
       if (!data.user?.treeId) {
         router.push("/profile");
       } else {

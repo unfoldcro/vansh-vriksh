@@ -38,10 +38,14 @@ export default function DashboardPage() {
     }
     if (user) {
       if (!user.treeId) {
-        router.push("/profile");
+        router.replace("/profile");
         return;
       }
       loadData(user.treeId);
+    }
+    // If auth resolved but no tree, stop showing loading
+    if (!authLoading && user && !user.treeId) {
+      setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading, router]);

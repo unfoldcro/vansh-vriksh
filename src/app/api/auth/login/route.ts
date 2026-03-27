@@ -40,8 +40,17 @@ export async function POST(req: Request) {
       fullName: user.fullName,
     });
 
+    const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map((e) => e.trim().toLowerCase());
+
     return NextResponse.json({
-      user: { id: user.id, email: user.email, fullName: user.fullName, role: user.role, treeId: user.treeId },
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        role: user.role,
+        treeId: user.treeId,
+        isAdmin: adminEmails.includes((user.email || "").toLowerCase()),
+      },
     });
   } catch (err) {
     console.error("Login error:", err);
