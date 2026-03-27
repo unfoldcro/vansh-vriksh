@@ -5,17 +5,16 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/hooks/useTranslation";
-import { getUser, getMembers, getTreeMetadata } from "@/lib/db";
+import { api } from "@/lib/api-client";
 import { OnboardingGuide } from "@/components/layout/OnboardingGuide";
 import { LanguageToggle } from "@/components/layout/LanguageToggle";
 import { DEMO_MEMBERS, DEMO_TREE } from "@/lib/demo-data";
-import type { UserProfile, Member, TreeMetadata } from "@/types";
+import type { Member, TreeMetadata } from "@/types";
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
   const { t } = useTranslation();
-  const [, setUserProfile] = useState<UserProfile | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [treeMeta, setTreeMeta] = useState<TreeMetadata | null>(null);
   const [loading, setLoading] = useState(true);
@@ -38,30 +37,28 @@ export default function DashboardPage() {
       return;
     }
     if (user) {
-      loadData(user.uid);
+      if (!user.treeId) {
+        router.push("/profile");
+        return;
+      }
+      loadData(user.treeId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading, router]);
 
-  const loadData = async (uid: string) => {
-    const profile = await getUser(uid);
-    if (!profile) {
-      router.push("/profile");
-      return;
+  const loadData = async (treeId: string) => {
+    try {
+      const [membersRes, treeRes] = await Promise.all([
+        api.get<{ members: Member[] }>(`/api/trees/${treeId}/members`),
+        api.get<{ tree: TreeMetadata }>(`/api/trees/${treeId}`),
+      ]);
+      setMembers(membersRes.members || []);
+      setTreeMeta(treeRes.tree || null);
+    } catch (err) {
+      console.error("Failed to load dashboard data:", err);
+    } finally {
+      setLoading(false);
     }
-    if (!profile.treeId) {
-      router.push("/profile");
-      return;
-    }
-    setUserProfile(profile);
-
-    const [memberList, metadata] = await Promise.all([
-      getMembers(uid),
-      getTreeMetadata(profile.treeId),
-    ]);
-    setMembers(memberList);
-    setTreeMeta(metadata);
-    setLoading(false);
   };
 
   const exitDemo = () => {

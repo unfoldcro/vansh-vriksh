@@ -4,14 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
-import {
-  getAllUsers,
-  getAllTrees,
-  getAllJoinRequests,
-  getAllConnections,
-  getGlobalDeletedCount,
-} from "@/lib/db-admin";
-import { approveJoinRequest, rejectJoinRequest, approveConnection } from "@/lib/db-extra";
+import { api } from "@/lib/api-client";
 import type { UserProfile, TreeMetadata, JoinRequest, Connection } from "@/types";
 
 type Tab = "overview" | "users" | "trees" | "requests" | "connections";
@@ -41,9 +34,7 @@ export default function AdminPage() {
   }, [user, authLoading, router]);
 
   const checkAdmin = async () => {
-    // Only unfoldcro@gmail.com is admin — permanent, no env vars needed
-    const ADMIN_EMAIL = "unfoldcro@gmail.com";
-    if (user?.email !== ADMIN_EMAIL) {
+    if (!user?.isAdmin) {
       router.push("/dashboard");
       return;
     }
@@ -60,18 +51,18 @@ export default function AdminPage() {
 
   const loadAllData = async () => {
     try {
-      const [u, t, jr, c, dc] = await Promise.all([
-        getAllUsers(),
-        getAllTrees(),
-        getAllJoinRequests(),
-        getAllConnections(),
-        getGlobalDeletedCount(),
+      const [statsRes, usersRes, treesRes, requestsRes, connectionsRes] = await Promise.all([
+        api.get<{ stats: { deletedCount: number } }>("/api/admin/stats"),
+        api.get<{ users: UserProfile[] }>("/api/admin/users"),
+        api.get<{ trees: TreeMetadata[] }>("/api/admin/trees"),
+        api.get<{ requests: JoinRequest[] }>("/api/admin/requests"),
+        api.get<{ connections: Connection[] }>("/api/admin/connections"),
       ]);
-      setUsers(u);
-      setTrees(t);
-      setJoinRequests(jr);
-      setConnections(c);
-      setDeletedCount(dc);
+      setUsers(usersRes.users || []);
+      setTrees(treesRes.trees || []);
+      setJoinRequests(requestsRes.requests || []);
+      setConnections(connectionsRes.connections || []);
+      setDeletedCount(statsRes.stats?.deletedCount || 0);
       setDataLoaded(true);
     } catch (err) {
       console.error("Admin data load error:", err);
@@ -81,24 +72,30 @@ export default function AdminPage() {
 
   const handleApproveJoin = async (requestId: string) => {
     if (!user) return;
-    await approveJoinRequest(requestId, user.uid);
-    setJoinRequests((prev) =>
-      prev.map((r) => (r.id === requestId ? { ...r, status: "approved" } : r))
-    );
+    try {
+      await api.post(`/api/join-requests/${requestId}/approve`);
+      setJoinRequests((prev) =>
+        prev.map((r) => (r.id === requestId ? { ...r, status: "approved" } : r))
+      );
+    } catch (err) { console.error("Approve error:", err); }
   };
 
   const handleRejectJoin = async (requestId: string) => {
-    await rejectJoinRequest(requestId);
-    setJoinRequests((prev) =>
-      prev.map((r) => (r.id === requestId ? { ...r, status: "rejected" } : r))
-    );
+    try {
+      await api.post(`/api/join-requests/${requestId}/reject`);
+      setJoinRequests((prev) =>
+        prev.map((r) => (r.id === requestId ? { ...r, status: "rejected" } : r))
+      );
+    } catch (err) { console.error("Reject error:", err); }
   };
 
   const handleApproveConnection = async (connectionId: string) => {
-    await approveConnection(connectionId);
-    setConnections((prev) =>
-      prev.map((c) => (c.id === connectionId ? { ...c, status: "approved" } : c))
-    );
+    try {
+      await api.post(`/api/connections/${connectionId}/approve`);
+      setConnections((prev) =>
+        prev.map((c) => (c.id === connectionId ? { ...c, status: "approved" } : c))
+      );
+    } catch (err) { console.error("Approve connection error:", err); }
   };
 
   if (authLoading || loading) {
@@ -260,7 +257,7 @@ function OverviewTab({
             <p className="py-4 text-center text-sm text-dark/40">No users yet</p>
           ) : (
             recentUsers.map((u) => (
-              <UserRow key={u.uid} user={u} />
+              <UserRow key={u.id} user={u} />
             ))
           )}
         </div>
@@ -295,7 +292,7 @@ function UsersTab({ users }: { users: UserProfile[] }) {
       u.fullName?.toLowerCase().includes(s) ||
       u.email?.toLowerCase().includes(s) ||
       u.phone?.includes(s) ||
-      u.uid.toLowerCase().includes(s) ||
+      u.id.toLowerCase().includes(s) ||
       u.district?.toLowerCase().includes(s) ||
       u.gotra?.toLowerCase().includes(s)
     );
@@ -317,7 +314,7 @@ function UsersTab({ users }: { users: UserProfile[] }) {
         {filtered.length === 0 ? (
           <p className="py-8 text-center text-dark/40">No users found</p>
         ) : (
-          filtered.map((u) => <UserRow key={u.uid} user={u} expanded />)
+          filtered.map((u) => <UserRow key={u.id} user={u} expanded />)
         )}
       </div>
     </div>
@@ -593,7 +590,7 @@ function UserRow({ user, expanded }: { user: UserProfile; expanded?: boolean }) 
                 )}
               </div>
               <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-dark/30">
-                <span>UID: {user.uid.slice(0, 12)}...</span>
+                <span>UID: {user.id.slice(0, 12)}...</span>
                 {user.treeId && (
                   <span>
                     Tree:{" "}
@@ -644,7 +641,7 @@ function TreeRow({ tree, expanded }: { tree: TreeMetadata; expanded?: boolean })
                 </span>
               </div>
               <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-dark/30">
-                <span>Owner: {tree.ownerUid.slice(0, 12)}...</span>
+                <span>Owner: {tree.ownerId?.slice(0, 12)}...</span>
                 <span>
                   KulDevta: {tree.kulDevta || "—"}
                 </span>
@@ -664,7 +661,7 @@ function TreeRow({ tree, expanded }: { tree: TreeMetadata; expanded?: boolean })
   );
 }
 
-function RoleBadge({ role }: { role: string }) {
+function RoleBadge({ role = "viewer" }: { role?: string | null }) {
   if (role === "owner") {
     return (
       <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-bold text-accent">
@@ -682,7 +679,7 @@ function RoleBadge({ role }: { role: string }) {
   return null;
 }
 
-function TreeStatusBadge({ status }: { status: string }) {
+function TreeStatusBadge({ status = "active" }: { status?: string | null }) {
   if (status === "active") {
     return (
       <span className="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold text-success">
@@ -707,7 +704,7 @@ function TreeStatusBadge({ status }: { status: string }) {
   return null;
 }
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status = "pending" }: { status?: string | null }) {
   if (status === "approved") {
     return (
       <span className="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold text-success">
@@ -729,7 +726,7 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function formatDate(dateStr: string): string {
+function formatDate(dateStr?: string | null): string {
   if (!dateStr) return "";
   try {
     const d = new Date(dateStr);

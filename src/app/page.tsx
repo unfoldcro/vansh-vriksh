@@ -10,24 +10,18 @@ import { DemoTree } from "@/components/tree/DemoTree";
 import { LanguageToggle } from "@/components/layout/LanguageToggle";
 import { LanguageChooser } from "@/components/layout/LanguageChooser";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useEmailAuth, useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Home() {
   const router = useRouter();
   const { t, setLang } = useTranslation();
   const { user } = useAuth();
-  const { sendLink, error: emailError, sending: emailSending, linkSent } = useEmailAuth();
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authEmail, setAuthEmail] = useState("");
 
   const handleEnterDemo = () => {
     localStorage.setItem("vansh-vriksh-demo", "true");
     router.push("/dashboard?demo=true");
   };
 
-  const handleAuthSubmit = async () => {
-    await sendLink(authEmail);
-  };
 
   // Relations for marquee — these are relation names, language-independent display
   const marqueeRelations = [
@@ -151,7 +145,7 @@ export default function Home() {
                 {t("nav.dashboard")}
               </Link>
             ) : (
-              <button onClick={() => setShowAuthModal(true)} className="btn-primary group">
+              <button onClick={() => router.push("/verify")} className="btn-primary group">
                 <span className="material-symbols-rounded icon-sm mr-2 transition-transform group-hover:scale-110">add_circle</span>
                 {t("landing.createTree")}
               </button>
@@ -604,7 +598,7 @@ export default function Home() {
                 {t("nav.dashboard")}
               </Link>
             ) : (
-              <button onClick={() => setShowAuthModal(true)} className="btn-primary group">
+              <button onClick={() => router.push("/verify")} className="btn-primary group">
                 <span className="material-symbols-rounded icon-sm mr-2">add_circle</span>
                 {t("landing.createTree")}
               </button>
@@ -612,64 +606,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* ─── AUTH BOTTOM SHEET ─── */}
-      {showAuthModal && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center">
-          <div className="absolute inset-0 bg-dark/50 backdrop-blur-sm" onClick={() => setShowAuthModal(false)} />
-          <div className="relative w-full max-w-md animate-fade-in-up rounded-t-2xl bg-bg-card p-6 shadow-xl sm:rounded-2xl sm:m-4">
-            <button
-              onClick={() => setShowAuthModal(false)}
-              className="absolute right-4 top-4 rounded-full p-1 text-dark/30 hover:text-dark hover:bg-bg-muted transition-colors"
-            >
-              <span className="material-symbols-rounded" style={{ fontSize: "20px" }}>close</span>
-            </button>
-
-            <h2 className="font-heading text-xl font-bold text-dark">{t("auth.verifyTitle")}</h2>
-            <p className="mt-1 text-sm text-dark/40">{t("auth.verifySubtitle")}</p>
-
-            <div className="mt-5 space-y-4">
-              {!linkSent ? (
-                <>
-                  <label className="block">
-                    <span className="text-sm font-medium text-dark">{t("auth.enterEmail")}</span>
-                    <input
-                      type="email"
-                      value={authEmail}
-                      onChange={(e) => setAuthEmail(e.target.value)}
-                      placeholder="you@example.com"
-                      className="input-field mt-1"
-                      onKeyDown={(e) => e.key === "Enter" && authEmail.includes("@") && handleAuthSubmit()}
-                    />
-                  </label>
-                  <p className="text-xs text-dark/40">{t("auth.emailNote")}</p>
-                  {emailError && <p className="text-sm text-error">{emailError}</p>}
-                  <button
-                    onClick={handleAuthSubmit}
-                    disabled={emailSending || !authEmail.includes("@")}
-                    className="btn-primary w-full"
-                  >
-                    {emailSending ? t("auth.sending") : t("auth.sendLink")}
-                  </button>
-                </>
-              ) : (
-                <div className="rounded-card bg-success/10 p-4 text-center">
-                  <div className="text-2xl">✅</div>
-                  <p className="mt-2 font-medium text-success">{t("auth.linkSent")}</p>
-                  <p className="mt-1 text-sm text-dark/50">{t("auth.linkSentNote")}</p>
-                </div>
-              )}
-            </div>
-
-            <div className="mt-4 text-center">
-              <Link href="/guide" className="inline-flex items-center gap-1 text-xs text-dark/30 transition-colors hover:text-accent">
-                <span className="material-symbols-rounded" style={{ fontSize: "14px" }}>help</span>
-                {t("guide.onboardTitle")}
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ─── FOOTER ─── */}
       <footer className="border-t border-border-warm bg-dark px-4 py-12">

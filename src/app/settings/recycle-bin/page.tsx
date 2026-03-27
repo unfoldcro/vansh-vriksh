@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
-import { recoverMember } from "@/lib/db";
-import { getDeletedMembers } from "@/lib/db-extra";
+import { api } from "@/lib/api-client";
 
 interface DeletedItem {
   id: string;
@@ -24,19 +23,27 @@ export default function RecycleBinPage() {
 
   useEffect(() => {
     if (!authLoading && !user) { router.push("/verify"); return; }
-    if (user) loadData(user.uid);
+    if (user?.treeId) loadData(user.treeId);
   }, [user, authLoading, router]);
 
-  const loadData = async (uid: string) => {
-    const deleted = await getDeletedMembers(uid);
-    setItems(deleted as DeletedItem[]);
+  const loadData = async (treeId: string) => {
+    try {
+      const res = await api.get<{ members: DeletedItem[] }>(`/api/trees/${treeId}/members?deleted=true`);
+      setItems(res.members || []);
+    } catch {
+      setItems([]);
+    }
     setLoading(false);
   };
 
   const handleRecover = async (memberId: string) => {
-    if (!user) return;
-    await recoverMember(user.uid, memberId);
-    setItems((prev) => prev.filter((i) => i.id !== memberId));
+    if (!user?.treeId) return;
+    try {
+      await api.post(`/api/trees/${user.treeId}/members/${memberId}/recover`);
+      setItems((prev) => prev.filter((i) => i.id !== memberId));
+    } catch (err) {
+      console.error("Failed to recover:", err);
+    }
   };
 
   const getDaysLeft = (recoverableUntil?: string): number => {

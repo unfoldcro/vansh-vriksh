@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useRef, useEffect, type PointerEvent as ReactPointerEvent } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect, useImperativeHandle, forwardRef, type PointerEvent as ReactPointerEvent } from "react";
 
 /* ────────────────────────────── Types ────────────────────────────── */
 
@@ -28,6 +28,11 @@ interface OrgChartTreeProps {
   onMemberTap?: (member: OrgMember) => void;
   isDemo?: boolean;
   className?: string;
+}
+
+export interface OrgChartTreeHandle {
+  navigateToMember: (memberId: string) => void;
+  resetView: () => void;
 }
 
 /* ──────────────────────── Generation labels ──────────────────────── */
@@ -244,13 +249,13 @@ function TrunkLine() {
 
 /* ─────────────────────── Main OrgChartTree ────────────────────────── */
 
-export default function OrgChartTree({
+const OrgChartTree = forwardRef<OrgChartTreeHandle, OrgChartTreeProps>(function OrgChartTree({
   members,
   focusedMemberId,
   onMemberTap,
   isDemo = false,
   className = "",
-}: OrgChartTreeProps) {
+}, ref) {
   const [expandedMembers, setExpandedMembers] = useState<Set<string>>(new Set());
   const [collapsedGens, setCollapsedGens] = useState<Set<number>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
@@ -297,16 +302,37 @@ export default function OrgChartTree({
         setScale(newScale);
       }
     } else if (pts.length === 1 && dragRef.current.isDragging) {
-      // Drag to pan (1 finger / mouse)
+      // Drag to pan (1 finger / mouse) with boundary limits
       const dx = e.clientX - dragRef.current.startX;
       const dy = e.clientY - dragRef.current.startY;
       if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
         dragRef.current.moved = true;
       }
-      setTranslate({
-        x: dragRef.current.startTx + dx,
-        y: dragRef.current.startTy + dy,
-      });
+
+      // Clamp translate so tree can't be dragged completely off-screen
+      const container = scrollRef.current;
+      const inner = treeInnerRef.current;
+      if (container && inner) {
+        const cW = container.clientWidth;
+        const cH = container.clientHeight;
+        const iW = inner.scrollWidth * scale;
+        const iH = inner.scrollHeight * scale;
+        // Allow dragging up to 60% off each side
+        const maxX = cW * 0.6;
+        const minX = -(iW - cW * 0.4);
+        const maxY = cH * 0.4;
+        const minY = -(iH - cH * 0.4);
+
+        setTranslate({
+          x: Math.max(minX, Math.min(maxX, dragRef.current.startTx + dx)),
+          y: Math.max(minY, Math.min(maxY, dragRef.current.startTy + dy)),
+        });
+      } else {
+        setTranslate({
+          x: dragRef.current.startTx + dx,
+          y: dragRef.current.startTy + dy,
+        });
+      }
     }
   }, [scale]);
 
@@ -350,6 +376,18 @@ export default function OrgChartTree({
     }
   }, [focusedMemberId]);
 
+  // Expose imperative methods via ref
+  useImperativeHandle(ref, () => ({
+    navigateToMember(memberId: string) {
+      const el = scrollRef.current?.querySelector(`[data-member-id="${memberId}"]`);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+    },
+    resetView() {
+      setScale(1);
+      setTranslate({ x: 0, y: 0 });
+    },
+  }), []);
+
   // Search
   const searchMatchedMembers = useMemo(() => {
     if (!searchQuery.trim()) return [];
@@ -380,7 +418,7 @@ export default function OrgChartTree({
     }
   }, [searchMatches, members]);
 
-  // Navigate to a member card: uncollapse gen, pan to center it in view
+  // Navigate to a member card: uncollapse gen, reset view, center on card
   const navigateToMember = useCallback((memberId: string) => {
     const member = members.find((m) => m.id === memberId);
     if (!member) return;
@@ -392,10 +430,11 @@ export default function OrgChartTree({
       return next;
     });
 
-    // Reset scale for accurate positioning
+    // Reset to 1:1 and zero translate first for accurate measurement
     setScale(1);
+    setTranslate({ x: 0, y: 0 });
 
-    // Wait for DOM to update after uncollapse
+    // Wait for DOM to re-render with reset position
     requestAnimationFrame(() => {
       setTimeout(() => {
         const container = scrollRef.current;
@@ -405,9 +444,9 @@ export default function OrgChartTree({
         const containerRect = container.getBoundingClientRect();
         const elRect = el.getBoundingClientRect();
 
-        // Calculate translate to center the element in the container
-        const targetX = containerRect.width / 2 - (elRect.left - containerRect.left + elRect.width / 2) + translate.x;
-        const targetY = containerRect.height / 2 - (elRect.top - containerRect.top + elRect.height / 2) + translate.y;
+        // Now translate is 0,0 and scale is 1, so elRect is the true position
+        const targetX = containerRect.width / 2 - (elRect.left - containerRect.left) - elRect.width / 2;
+        const targetY = containerRect.height / 2 - (elRect.top - containerRect.top) - elRect.height / 2;
 
         setTranslate({ x: targetX, y: targetY });
 
@@ -416,9 +455,9 @@ export default function OrgChartTree({
           el.classList.add("ring-2", "ring-accent", "ring-offset-2");
           setTimeout(() => el.classList.remove("ring-2", "ring-accent", "ring-offset-2"), 2000);
         }, 200);
-      }, 150);
+      }, 100);
     });
-  }, [members, translate]);
+  }, [members]);
 
   const toggleMemberExpand = useCallback((id: string) => {
     setExpandedMembers((prev) => {
@@ -654,4 +693,6 @@ export default function OrgChartTree({
       )}
     </div>
   );
-}
+});
+
+export default OrgChartTree;

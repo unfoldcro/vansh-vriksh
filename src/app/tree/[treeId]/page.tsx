@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/hooks/useTranslation";
-import { getTreeMetadata, getMembers, getUser, setTreePasscode } from "@/lib/db";
+import { api } from "@/lib/api-client";
 import { isDemoTreeId, DEMO_MEMBERS, DEMO_TREE } from "@/lib/demo-data";
 import FamilyTree from "@/components/tree/FamilyTree";
 import UltraLightTree from "@/components/tree/UltraLightTree";
@@ -66,29 +66,34 @@ export default function TreeViewPage() {
   }, [treeId, user]);
 
   const loadTree = async () => {
-    const meta = await getTreeMetadata(treeId);
-    if (!meta) { setLoading(false); return; }
-    setTreeMeta(meta);
+    try {
+      const treeRes = await api.get<{ tree: TreeMetadata }>(`/api/trees/${treeId}`);
+      const meta = treeRes.tree;
+      if (!meta) { setLoading(false); return; }
+      setTreeMeta(meta);
 
-    // Load existing passcode for share modal
-    if (meta.passcode) {
-      setSharePasscode(meta.passcode);
-      setUsePasscode(true);
-    }
+      // Load existing passcode for share modal
+      if (meta.passcode) {
+        setSharePasscode(meta.passcode);
+        setUsePasscode(true);
+      }
 
-    if (user) {
-      const profile = await getUser(user.uid);
-      if (profile?.treeId === treeId) {
-        setIsOwner(profile.role === "owner");
-        const memberList = await getMembers(user.uid);
-        setMembers(memberList);
-        const selfMember = memberList.find(
-          (m) => m.relation === "self" || m.relationGroup === "self" && m.generationLevel === 0
+      if (user) {
+        if (user.treeId === treeId) {
+          setIsOwner(user.role === "owner");
+          // Owner bypasses passcode
+          setPasscodeUnlocked(true);
+        }
+        // Load members via API
+        const membersRes = await api.get<{ members: Member[] }>(`/api/trees/${treeId}/members`);
+        setMembers(membersRes.members || []);
+        const selfMember = (membersRes.members || []).find(
+          (m: Member) => m.relation === "self" || (m.relationGroup === "self" && m.generationLevel === 0)
         );
         if (selfMember) setSelfMemberId(selfMember.id);
-        // Owner bypasses passcode
-        setPasscodeUnlocked(true);
       }
+    } catch (err) {
+      console.error("Failed to load tree:", err);
     }
     setLoading(false);
   };
@@ -106,9 +111,13 @@ export default function TreeViewPage() {
 
   const handleShare = async () => {
     if (!treeMeta) return;
-    // Save passcode to Firestore
+    // Save passcode via API
     if (!isDemoTreeId(treeId)) {
-      await setTreePasscode(treeId, usePasscode && sharePasscode.length === 4 ? sharePasscode : null);
+      try {
+        await api.put(`/api/trees/${treeId}/passcode`, {
+          passcode: usePasscode && sharePasscode.length === 4 ? sharePasscode : null,
+        });
+      } catch { /* ignore passcode save errors */ }
     }
     const msg = buildShareMessage();
     const waUrl = `https://wa.me/?text=${encodeURIComponent(msg)}`;

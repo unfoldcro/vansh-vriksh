@@ -5,14 +5,14 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/hooks/useTranslation";
-import { getUser, createUser, createTree, findDuplicateTrees } from "@/lib/db";
+import { api } from "@/lib/api-client";
 import TransliterateInput from "@/components/ui/TransliterateInput";
 import {
   GOTRAS, NAKSHATRAS, RASHIS, VARNAS, INDIAN_STATES,
   MP_DISTRICTS, DOB_DECADES, DOB_MARKERS,
   COMMON_KUL_DEVTAS, COMMON_KUL_DEVIS, TEERTH_STHALS,
 } from "@/lib/data";
-import type { DobType, TreeMetadata } from "@/types";
+import type { DobType } from "@/types";
 
 type Step = "identity" | "location" | "ritual" | "review";
 
@@ -22,7 +22,16 @@ export default function ProfilePage() {
   const { t, lang } = useTranslation();
   const [step, setStep] = useState<Step>("identity");
   const [saving, setSaving] = useState(false);
-  const [duplicates, setDuplicates] = useState<TreeMetadata[]>([]);
+  const [error, setError] = useState("");
+  const [duplicates, setDuplicates] = useState<Array<{
+    treeId: string;
+    familySurname: string;
+    gotra: string;
+    village: string;
+    district: string;
+    totalMembers: number;
+    generations: number;
+  }>>([]);
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
 
   // Identity fields
@@ -64,20 +73,15 @@ export default function ProfilePage() {
     }
   }, [user, authLoading, router]);
 
+  // If user already has a tree, go to dashboard
   useEffect(() => {
-    if (user) {
-      getUser(user.uid).then((profile) => {
-        if (profile?.treeId) {
-          router.push("/dashboard");
-        }
-      });
+    if (user?.treeId) {
+      router.push("/dashboard");
     }
   }, [user, router]);
 
   const isHindiMode = lang === "hi" || lang === "hinglish";
 
-  // In Hindi mode, user types Hindi name, English is auto-generated
-  // In English mode, user types English name, Hindi is auto-generated
   const primaryName = isHindiMode ? fullNameHi : fullName;
   const secondaryName = isHindiMode ? fullName : fullNameHi;
 
@@ -107,88 +111,87 @@ export default function ProfilePage() {
     }
   };
 
+  const buildProfile = () => ({
+    fullName: fullName || fullNameHi,
+    fullNameHi: fullNameHi || undefined,
+    alsoKnownAs: alsoKnownAs || undefined,
+    dob: getDobValue(),
+    dobType,
+    dobApproximate: getDobApproximate(),
+    gotra,
+    kulDevta: kulDevta || undefined,
+    kulDevi: kulDevi || undefined,
+    jati: jati || undefined,
+    nakshatra: nakshatra || undefined,
+    rashi: rashi || undefined,
+    varna: varna || undefined,
+    shakha: shakha || undefined,
+    pravar: pravar || undefined,
+    village,
+    tehsil: tehsil || undefined,
+    district,
+    state,
+    currentCity: currentCity || undefined,
+    currentState: currentState || undefined,
+    migrationNote: migrationNote || undefined,
+    teerthSthal: teerthSthal || undefined,
+    familyPriest: familyPriest || undefined,
+    lang,
+  });
+
   const handleSubmit = async () => {
     if (!user) return;
     setSaving(true);
+    setError("");
 
     try {
-      const profile = {
-        fullName: fullName || fullNameHi,
-        fullNameHi: fullNameHi || undefined,
-        alsoKnownAs: alsoKnownAs || undefined,
-        dob: getDobValue(),
-        dobType,
-        dobApproximate: getDobApproximate(),
-        phone: user.phoneNumber || undefined,
-        email: user.email || undefined,
-        authMethod: user.phoneNumber ? "phone" as const : "email" as const,
-        gotra,
-        kulDevta: kulDevta || undefined,
-        kulDevi: kulDevi || undefined,
-        jati: jati || undefined,
-        nakshatra: nakshatra || undefined,
-        rashi: rashi || undefined,
-        varna: varna || undefined,
-        shakha: shakha || undefined,
-        pravar: pravar || undefined,
-        village,
-        tehsil: tehsil || undefined,
-        district,
-        state,
-        currentCity: currentCity || undefined,
-        currentState: currentState || undefined,
-        migrationNote: migrationNote || undefined,
-        teerthSthal: teerthSthal || undefined,
-        familyPriest: familyPriest || undefined,
-        lang: lang as "hi",
-      };
-
+      // Check for duplicates first
       const surname = fullName.split(" ").pop() || fullNameHi.split(" ").pop() || "";
-      const matches = await findDuplicateTrees(surname, gotra, district);
+      const dupRes = await api.get<{ trees: Array<typeof duplicates[0]> }>(
+        `/api/trees/duplicates?surname=${encodeURIComponent(surname)}&gotra=${encodeURIComponent(gotra)}&district=${encodeURIComponent(district)}`
+      );
 
-      if (matches.length > 0) {
-        setDuplicates(matches);
+      if (dupRes.trees && dupRes.trees.length > 0) {
+        setDuplicates(dupRes.trees);
         setShowDuplicateModal(true);
         setSaving(false);
         return;
       }
 
-      await createUserAndTree(profile);
-    } catch {
+      await createUserAndTree();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
       setSaving(false);
     }
   };
 
-  const createUserAndTree = async (profile: Parameters<typeof createUser>[1]) => {
+  const createUserAndTree = async () => {
     if (!user) return;
     setSaving(true);
+    setError("");
     try {
-      await createUser(user.uid, profile);
-      await createTree(user.uid, profile);
+      const profile = buildProfile();
+
+      // Update user profile
+      await api.put("/api/users/me", profile);
+
+      // Create tree
+      await api.post<{ treeId: string }>("/api/trees", profile);
+
       router.push("/dashboard");
-    } catch {
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create tree");
       setSaving(false);
     }
   };
 
   const handleDuplicateChoice = async (choice: "join" | "new" | "later") => {
-    if (!user) return;
     setShowDuplicateModal(false);
-
-    const profile = {
-      fullName: fullName || fullNameHi, fullNameHi, gotra, kulDevta, kulDevi, jati,
-      village, tehsil, district, state,
-      dob: getDobValue(), dobType, dobApproximate: getDobApproximate(),
-      phone: user.phoneNumber || undefined,
-      email: user.email || undefined,
-      authMethod: user.phoneNumber ? "phone" as const : "email" as const,
-      lang: lang as "hi",
-    };
 
     if (choice === "join" && duplicates[0]) {
       router.push(`/join/${duplicates[0].treeId}`);
     } else {
-      await createUserAndTree(profile);
+      await createUserAndTree();
     }
   };
 
@@ -237,11 +240,17 @@ export default function ProfilePage() {
           {t(`profile.step${stepIndex + 1}`)}
         </p>
 
+        {/* Error message */}
+        {error && (
+          <div className="mt-4 rounded-lg bg-error/10 px-4 py-3 text-sm text-error">
+            {error}
+          </div>
+        )}
+
         <div className="mt-6 card p-6">
           {/* ─── STEP 1: Identity ─── */}
           {step === "identity" && (
             <div className="space-y-5">
-              {/* Name with auto-transliteration */}
               <div>
                 <span className="text-sm font-medium text-earth">
                   {t("profile.fullName")} <span className="text-error">*</span>
@@ -257,7 +266,6 @@ export default function ProfilePage() {
                 />
               </div>
 
-              {/* Also Known As */}
               <label className="block">
                 <span className="text-sm font-medium text-earth">
                   {t("profile.alsoKnownAs")}

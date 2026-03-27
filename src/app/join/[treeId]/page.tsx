@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
-import { getTreeMetadata, getUser } from "@/lib/db";
-import { createJoinRequest } from "@/lib/db-extra";
+import { api } from "@/lib/api-client";
 import { RELATIONS } from "@/lib/relations";
 import type { TreeMetadata } from "@/types";
 
@@ -29,18 +28,20 @@ export default function JoinTreePage() {
 
   useEffect(() => {
     if (user) {
-      getUser(user.uid).then((profile) => {
-        if (profile?.fullName) setYourName(profile.fullName);
-        if (profile?.treeId === treeId) {
-          router.push("/dashboard");
-        }
-      });
+      if (user.fullName) setYourName(user.fullName);
+      if (user.treeId === treeId) {
+        router.push("/dashboard");
+      }
     }
   }, [user, treeId, router]);
 
   const loadTree = async () => {
-    const meta = await getTreeMetadata(treeId);
-    setTreeMeta(meta);
+    try {
+      const res = await api.get<{ tree: TreeMetadata }>(`/api/trees/${treeId}`);
+      setTreeMeta(res.tree || null);
+    } catch {
+      setTreeMeta(null);
+    }
     setLoading(false);
   };
 
@@ -55,7 +56,7 @@ export default function JoinTreePage() {
     }
 
     try {
-      await createJoinRequest(treeId, user.uid, yourName, claimedRelation);
+      await api.post("/api/join-requests", { treeId, claimedRelation });
       setSubmitted(true);
     } catch {
       setError("कुछ गलत हो गया / Something went wrong");

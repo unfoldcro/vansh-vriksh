@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
-import { getUser } from "@/lib/db";
-import { discoverByGotra } from "@/lib/db-extra";
+import { api } from "@/lib/api-client";
 import { GOTRAS, MP_DISTRICTS } from "@/lib/data";
 import TreePreviewCard from "@/components/tree/TreePreviewCard";
 import type { TreeMetadata } from "@/types";
@@ -22,20 +21,19 @@ export default function DiscoverPage() {
 
   useEffect(() => {
     if (!authLoading && !user) { router.push("/verify"); return; }
-    if (user) {
-      getUser(user.uid).then((p) => {
-        if (p?.gotra) {
-          setUserGotra(p.gotra);
-          setGotra(p.gotra);
-        }
-      });
+    if (user?.gotra) {
+      setUserGotra(user.gotra);
+      setGotra(user.gotra);
     }
   }, [user, authLoading, router]);
 
   const handleSearch = async () => {
     if (!gotra) return;
     setSearching(true);
-    const trees = await discoverByGotra(gotra, district || undefined);
+    const res = await api.get<{ results: TreeMetadata[] }>(
+      `/api/trees/discover?gotra=${encodeURIComponent(gotra)}${district ? `&district=${encodeURIComponent(district)}` : ""}`
+    );
+    const trees = res.results || [];
     setResults(trees);
     setSearched(true);
     setSearching(false);

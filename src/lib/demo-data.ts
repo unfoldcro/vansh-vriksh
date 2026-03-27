@@ -97,7 +97,7 @@ export const DEMO_MEMBERS: Member[] = [
 
 export const DEMO_TREE: TreeMetadata = {
   treeId: DEMO_TREE_ID,
-  ownerUid: "demo",
+  ownerId: "demo",
   familySurname: "Patil",
   gotra: "Kashyap",
   kulDevta: "Shri Vishwanath",
@@ -109,7 +109,7 @@ export const DEMO_TREE: TreeMetadata = {
   totalMembers: 27,
   generations: 6,
   createdAt: ts,
-  isPublicToSameGotra: true,
+  isPublic: true,
   status: "active",
 };
 

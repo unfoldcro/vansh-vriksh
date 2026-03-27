@@ -4,9 +4,9 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
-import { getUser, getMembers, softDeleteMember } from "@/lib/db";
+import { api } from "@/lib/api-client";
 import { getRelationConfig } from "@/lib/relations";
-import type { Member, UserProfile } from "@/types";
+import type { Member } from "@/types";
 
 type SortKey = "name" | "generation" | "dateAdded";
 type FilterGen = "all" | "-3" | "-2" | "-1" | "0" | "1" | "2" | "3";
@@ -14,7 +14,6 @@ type FilterGen = "all" | "-3" | "-2" | "-1" | "0" | "1" | "2" | "3";
 export default function ListViewPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -25,20 +24,24 @@ export default function ListViewPage() {
 
   useEffect(() => {
     if (!authLoading && !user) { router.push("/verify"); return; }
-    if (user) loadData(user.uid);
+    if (user) {
+      if (!user.treeId) { router.push("/profile"); return; }
+      loadData(user.treeId);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading, router]);
 
-  const loadData = async (uid: string) => {
-    const p = await getUser(uid);
-    if (!p?.treeId) { router.push("/profile"); return; }
-    setProfile(p);
-    const m = await getMembers(uid);
-    setMembers(m);
+  const loadData = async (treeId: string) => {
+    try {
+      const res = await api.get<{ members: Member[] }>(`/api/trees/${treeId}/members`);
+      setMembers(res.members || []);
+    } catch (err) {
+      console.error("Failed to load members:", err);
+    }
     setLoading(false);
   };
 
-  const isOwner = profile?.role === "owner";
+  const isOwner = user?.role === "owner";
 
   const filtered = useMemo(() => {
     let list = [...members];
@@ -62,16 +65,20 @@ export default function ListViewPage() {
     list.sort((a, b) => {
       if (sortBy === "name") return a.name.localeCompare(b.name);
       if (sortBy === "generation") return a.generationLevel - b.generationLevel;
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
     });
 
     return list;
   }, [members, search, sortBy, filterGen, filterAlive]);
 
   const handleDelete = async (memberId: string) => {
-    if (!user) return;
-    await softDeleteMember(user.uid, memberId);
-    setMembers((prev) => prev.filter((m) => m.id !== memberId));
+    if (!user?.treeId) return;
+    try {
+      await api.delete(`/api/trees/${user.treeId}/members/${memberId}`);
+      setMembers((prev) => prev.filter((m) => m.id !== memberId));
+    } catch (err) {
+      console.error("Failed to delete member:", err);
+    }
     setDeleteConfirm(null);
   };
 
@@ -167,7 +174,7 @@ export default function ListViewPage() {
                     </div>
 
                     {/* Actions - role based */}
-                    {(isOwner || member.addedBy === user?.uid) && member.relation !== "self" && (
+                    {(isOwner || member.addedBy === user?.id) && member.relation !== "self" && (
                       <div className="flex gap-1">
                         <Link href={`/member/edit/${member.id}`}
                           className="rounded px-2 py-1 text-xs text-earth/50 hover:bg-bg-muted hover:text-earth">

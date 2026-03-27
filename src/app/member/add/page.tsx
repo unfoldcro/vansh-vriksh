@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/hooks/useTranslation";
-import { addMember } from "@/lib/db";
+import { api } from "@/lib/api-client";
 import { isDemoMode } from "@/lib/demo-data";
 import { RELATION_GROUPS, RELATIONS, getRelationConfig } from "@/lib/relations";
 import { DOB_DECADES, DOB_MARKERS, GOTRAS, TEERTH_STHALS } from "@/lib/data";
@@ -123,7 +123,11 @@ export default function AddMemberPage() {
         oralHistory: oralHistory || undefined,
       };
 
-      await addMember(user.uid, memberData);
+      if (!user.treeId) {
+        router.push("/profile");
+        return;
+      }
+      await api.post(`/api/trees/${user.treeId}/members`, memberData);
       router.push("/dashboard");
     } catch {
       setSaving(false);
