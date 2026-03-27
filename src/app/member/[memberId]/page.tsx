@@ -8,7 +8,6 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { api } from "@/lib/api-client";
 import { RELATIONS } from "@/lib/relations";
 import { DOB_DECADES, DOB_MARKERS, TEERTH_STHALS } from "@/lib/data";
-import TransliterateInput from "@/components/ui/TransliterateInput";
 import type { Member, DobType, Gender } from "@/types";
 
 export default function MemberDetailPage() {
@@ -337,11 +336,12 @@ export default function MemberDetailPage() {
                 <span className="text-sm font-medium text-dark">
                   {isHindi ? "नाम (हिंदी)" : "Name (Hindi)"}
                 </span>
-                <TransliterateInput
+                <input
+                  type="text"
                   value={nameHi}
-                  onChange={setNameHi}
+                  onChange={(e) => setNameHi(e.target.value)}
                   placeholder={isHindi ? "हिंदी में नाम" : "Name in Hindi"}
-                  className="input-field mt-1"
+                  className="input-field mt-1 font-hindi"
                 />
               </label>
 

@@ -9,7 +9,6 @@ import { api } from "@/lib/api-client";
 import { isDemoMode } from "@/lib/demo-data";
 import { RELATION_GROUPS, RELATIONS, getRelationConfig } from "@/lib/relations";
 import { DOB_DECADES, DOB_MARKERS, GOTRAS, TEERTH_STHALS } from "@/lib/data";
-import TransliterateInput from "@/components/ui/TransliterateInput";
 import type { DobType, Gender, Member } from "@/types";
 
 type FormStep = "relation" | "details" | "marriage" | "confirm";
@@ -60,12 +59,6 @@ export default function AddMemberPage() {
   const relationConfig = getRelationConfig(selectedRelation);
   const isSpouseRelation = relationConfig?.triggersMarriage || false;
   const isHindiMode = lang === "hi" || lang === "hinglish";
-
-  // Primary/secondary name based on language
-  const primaryName = isHindiMode ? nameHi : name;
-  const secondaryName = isHindiMode ? name : nameHi;
-  const setPrimaryName = (val: string) => { if (isHindiMode) setNameHi(val); else setName(val); };
-  const setSecondaryName = (val: string) => { if (isHindiMode) setName(val); else setNameHi(val); };
 
   // Auto-set gender from relation config
   useEffect(() => {
@@ -225,21 +218,34 @@ export default function AddMemberPage() {
                 </div>
               )}
 
-              {/* Name with auto-transliteration */}
-              <div>
+              {/* Name — English */}
+              <label className="block">
                 <span className="text-sm font-medium text-earth">
-                  {t("member.name")} <span className="text-error">*</span>
+                  {isHindiMode ? "नाम (English)" : "Name (English)"} <span className="text-error">*</span>
                 </span>
-                <TransliterateInput
-                  value={primaryName}
-                  onChange={setPrimaryName}
-                  transliteratedValue={secondaryName}
-                  onTransliteratedChange={setSecondaryName}
-                  placeholder={isHindiMode ? "सुरेश पाटिल" : "Suresh Patil"}
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Suresh Patil"
                   required
-                  className="mt-1"
+                  className="mt-1 input-field"
                 />
-              </div>
+              </label>
+
+              {/* Name — Hindi */}
+              <label className="block">
+                <span className="text-sm font-medium text-earth">
+                  {isHindiMode ? "नाम (हिंदी)" : "Name (Hindi)"}
+                </span>
+                <input
+                  type="text"
+                  value={nameHi}
+                  onChange={(e) => setNameHi(e.target.value)}
+                  placeholder="सुरेश पाटिल"
+                  className="mt-1 input-field font-hindi"
+                />
+              </label>
 
               {/* Also Known As */}
               <label className="block">

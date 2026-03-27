@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/hooks/useTranslation";
 import { api } from "@/lib/api-client";
-import TransliterateInput from "@/components/ui/TransliterateInput";
 import {
   GOTRAS, NAKSHATRAS, RASHIS, VARNAS, INDIAN_STATES,
   MP_DISTRICTS, DOB_DECADES, DOB_MARKERS,
@@ -82,18 +81,7 @@ export default function ProfilePage() {
 
   const isHindiMode = lang === "hi" || lang === "hinglish";
 
-  const primaryName = isHindiMode ? fullNameHi : fullName;
-  const secondaryName = isHindiMode ? fullName : fullNameHi;
-
-  const setPrimaryName = (val: string) => {
-    if (isHindiMode) setFullNameHi(val);
-    else setFullName(val);
-  };
-
-  const setSecondaryName = (val: string) => {
-    if (isHindiMode) setFullName(val);
-    else setFullNameHi(val);
-  };
+  const primaryName = fullName || fullNameHi;
 
   const getDobValue = (): string | undefined => {
     switch (dobType) {
@@ -251,20 +239,32 @@ export default function ProfilePage() {
           {/* ─── STEP 1: Identity ─── */}
           {step === "identity" && (
             <div className="space-y-5">
-              <div>
+              <label className="block">
                 <span className="text-sm font-medium text-earth">
-                  {t("profile.fullName")} <span className="text-error">*</span>
+                  {isHindiMode ? "नाम (English)" : "Full Name (English)"} <span className="text-error">*</span>
                 </span>
-                <TransliterateInput
-                  value={primaryName}
-                  onChange={setPrimaryName}
-                  transliteratedValue={secondaryName}
-                  onTransliteratedChange={setSecondaryName}
-                  placeholder={isHindiMode ? "राजेश पाटिल" : "Rajesh Patil"}
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Rajesh Patil"
                   required
-                  className="mt-1"
+                  className="mt-1 input-field"
                 />
-              </div>
+              </label>
+
+              <label className="block">
+                <span className="text-sm font-medium text-earth">
+                  {isHindiMode ? "नाम (हिंदी)" : "Full Name (Hindi)"}
+                </span>
+                <input
+                  type="text"
+                  value={fullNameHi}
+                  onChange={(e) => setFullNameHi(e.target.value)}
+                  placeholder="राजेश पाटिल"
+                  className="mt-1 input-field font-hindi"
+                />
+              </label>
 
               <label className="block">
                 <span className="text-sm font-medium text-earth">
