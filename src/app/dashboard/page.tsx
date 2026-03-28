@@ -249,12 +249,12 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="mt-2 space-y-1.5">
-                  {members.slice(0, 15).map((member) => (
+                  {livingMembers.slice(0, 15).map((member) => (
                     <MemberCard key={member.id} member={member} onTap={setSelectedMember} />
                   ))}
-                  {members.length > 15 && (
+                  {livingMembers.length > 15 && (
                     <Link href="/tree/list" className="block text-center text-xs text-accent hover:underline py-1">
-                      {t("dashboard.more")} ({members.length - 15})
+                      {t("dashboard.more")} ({livingMembers.length - 15})
                     </Link>
                   )}
                 </div>
@@ -317,10 +317,10 @@ export default function DashboardPage() {
       </div>
 
       {/* Member Modal */}
-      {selectedMember && user?.treeId && (
+      {selectedMember && (user?.treeId || isDemo) && (
         <MemberModal
           member={selectedMember}
-          treeId={user.treeId}
+          treeId={user?.treeId || treeMeta?.treeId || "DEMO"}
           onClose={() => setSelectedMember(null)}
           onUpdated={(updated) => {
             setMembers((prev) => prev.map((m) => m.id === updated.id ? updated : m));
