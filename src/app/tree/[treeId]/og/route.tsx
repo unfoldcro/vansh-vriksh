@@ -6,7 +6,11 @@ export const runtime = "nodejs";
 export async function GET(_req: Request, { params }: { params: { treeId: string } }) {
   const tree = await getTreeMetadata(params.treeId);
 
-  const surname = tree?.familySurname || "Family";
+  if (!tree) {
+    return new Response("Tree not found", { status: 404 });
+  }
+
+  const surname = tree.familySurname || "Family";
   const gotra = tree?.gotra || "";
   const village = tree?.village || "";
   const district = tree?.district || "";

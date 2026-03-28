@@ -165,6 +165,31 @@ export async function getTreeMetadata(treeId: string) {
   return tree || null;
 }
 
+// ─── Authorization ───
+export async function isTreeOwnerOrEditor(userId: string, treeId: string): Promise<boolean> {
+  // Check if user is tree owner
+  const [tree] = await db.select({ ownerId: trees.ownerId }).from(trees).where(eq(trees.treeId, treeId)).limit(1);
+  if (tree?.ownerId === userId) return true;
+
+  // Check if user's treeId matches (branch editors have same treeId)
+  const [user] = await db.select({ treeId: users.treeId, role: users.role }).from(users).where(eq(users.id, userId)).limit(1);
+  return user?.treeId === treeId && (user?.role === "owner" || user?.role === "branch_editor");
+}
+
+export async function isTreeOwner(userId: string, treeId: string): Promise<boolean> {
+  const [tree] = await db.select({ ownerId: trees.ownerId }).from(trees).where(eq(trees.treeId, treeId)).limit(1);
+  return tree?.ownerId === userId;
+}
+
+export async function verifyMemberBelongsToTree(memberId: string, treeId: string): Promise<boolean> {
+  const [member] = await db
+    .select({ treeId: members.treeId })
+    .from(members)
+    .where(eq(members.id, memberId))
+    .limit(1);
+  return member?.treeId === treeId;
+}
+
 export async function setTreePasscode(treeId: string, passcode: string | null) {
   await db.update(trees).set({ passcode: passcode || null }).where(eq(trees.treeId, treeId));
 }

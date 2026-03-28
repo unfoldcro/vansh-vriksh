@@ -1,7 +1,10 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "dev-secret-change-me");
+if (!process.env.JWT_SECRET && process.env.NODE_ENV === "production") {
+  throw new Error("JWT_SECRET environment variable is required in production");
+}
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "dev-secret-change-me-local-only");
 const COOKIE_NAME = "vansh-vriksh-token";
 const EXPIRY = "7d";
 

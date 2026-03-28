@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "dev-secret-change-me");
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "dev-secret-change-me-local-only");
 const COOKIE_NAME = "vansh-vriksh-token";
 
 const PROTECTED_ROUTES = ["/dashboard", "/profile", "/member", "/settings", "/discover"];
