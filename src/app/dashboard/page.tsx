@@ -77,7 +77,7 @@ export default function DashboardPage() {
 
   const shareMessage = treeMeta
     ? encodeURIComponent(
-        `🌳 ${treeMeta.familySurname} परिवार का वंश वृक्ष देखें!\n${treeMeta.familySurname} Family Tree\nhttps://vansh-vriksh.unfoldcro.in/tree/${treeMeta.treeId}`
+        `🌳 *${treeMeta.familySurname} परिवार का वंश वृक्ष*\n${treeMeta.familySurname} Family Tree${treeMeta.gotra ? ` | ${treeMeta.gotra} गोत्र` : ""}\n${[treeMeta.village, treeMeta.district].filter(Boolean).join(", ") ? `📍 ${[treeMeta.village, treeMeta.district].filter(Boolean).join(", ")}\n` : ""}👥 ${treeMeta.totalMembers || 1} सदस्य | 📊 ${treeMeta.generations || 1} पीढ़ी\n\n👇 यहाँ देखें / View here:\nhttps://vansh-vriksh.unfoldcro.in/tree/${treeMeta.treeId}\n\n_100% मुफ्त सेवा — Vansh Vriksh_`
       )
     : "";
 

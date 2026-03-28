@@ -128,10 +128,20 @@ export default function TreeViewPage() {
 
   const buildShareMessage = () => {
     if (!treeMeta) return "";
-    let msg = `🌳 ${treeMeta.familySurname} ${t("share.shareMessage").replace("{family}", treeMeta.familySurname)}\n${treeUrl}`;
+    const s = treeMeta.familySurname;
+    const gotra = treeMeta.gotra ? ` | ${treeMeta.gotra} गोत्र` : "";
+    const loc = [treeMeta.village, treeMeta.district].filter(Boolean).join(", ");
+    const stats = `👥 ${treeMeta.totalMembers || 1} सदस्य | 📊 ${treeMeta.generations || 1} पीढ़ी`;
+
+    let msg = `🌳 *${s} परिवार का वंश वृक्ष*\n`;
+    msg += `${s} Family Tree${gotra}\n`;
+    if (loc) msg += `📍 ${loc}\n`;
+    msg += `${stats}\n\n`;
+    msg += `👇 यहाँ देखें / View here:\n${treeUrl}`;
     if (usePasscode && sharePasscode.length === 4) {
-      msg += `\n\n🔒 Passcode: ${sharePasscode}`;
+      msg += `\n\n🔒 Passcode: *${sharePasscode}*`;
     }
+    msg += `\n\n_100% मुफ्त सेवा — Vansh Vriksh_`;
     return msg;
   };
 
