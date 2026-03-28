@@ -89,8 +89,15 @@ export default function DashboardPage() {
     );
   }
 
-  const livingMembers = members.filter((m) => m.alive);
-  const deceasedMembers = members.filter((m) => !m.alive);
+  // Sort: self first, then by generation (elders first), then alphabetical
+  const sorted = [...members].sort((a, b) => {
+    if (a.relation === "self") return -1;
+    if (b.relation === "self") return 1;
+    if (a.generationLevel !== b.generationLevel) return a.generationLevel - b.generationLevel;
+    return (a.name || "").localeCompare(b.name || "");
+  });
+  const livingMembers = sorted.filter((m) => m.alive);
+  const deceasedMembers = sorted.filter((m) => !m.alive);
   const familyLabel = t("stats.families") === "परिवार" ? "परिवार" : "Family";
 
   // Find self member for tree focus
