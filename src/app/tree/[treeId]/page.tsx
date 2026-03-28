@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
@@ -26,6 +26,8 @@ export default function TreeViewPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("tree");
   const [isOwner, setIsOwner] = useState(false);
   const [selfMemberId, setSelfMemberId] = useState<string | undefined>();
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const treeContainerRef = useRef<HTMLDivElement>(null);
 
   // Share modal state
   const [showShareModal, setShowShareModal] = useState(false);
@@ -49,6 +51,26 @@ export default function TreeViewPage() {
       setTimeout(() => el.classList.remove("ring-4", "ring-accent/50"), 1500);
     }
   }, [selfMemberId]);
+
+  // Fullscreen toggle
+  const toggleFullscreen = useCallback(async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await (treeContainerRef.current || document.documentElement).requestFullscreen();
+        setIsFullscreen(true);
+      } else {
+        await document.exitFullscreen();
+        setIsFullscreen(false);
+      }
+    } catch { /* ignore fullscreen errors on unsupported devices */ }
+  }, []);
+
+  // Sync fullscreen state when user exits via Escape
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", handler);
+    return () => document.removeEventListener("fullscreenchange", handler);
+  }, []);
 
   // Load tree data once on mount (parallel fetch for speed)
   useEffect(() => {
@@ -219,18 +241,74 @@ export default function TreeViewPage() {
     );
   }
 
+  // ─── Shared tree content (used by both public and logged-in views) ───
+  const familyLabel = t("stats.families") === "परिवार" ? "परिवार" : "Family";
+
+  const treeContent = (
+    <div className="h-[80vh] overflow-auto">
+      {members.length > 0 ? (
+        <>
+          {viewMode === "tree" && <FamilyTree members={members} focusedMemberId={selfMemberId} />}
+          {viewMode === "ultralight" && <UltraLightTree members={members} />}
+          {viewMode === "shraddh" && <ShraddhView members={members} />}
+        </>
+      ) : (
+        <div className="flex h-full items-center justify-center">
+          <p className="text-earth/50">{t("common.loading")}</p>
+        </div>
+      )}
+    </div>
+  );
+
+  const floatingButtons = (
+    <div className="fixed bottom-6 right-4 z-40 flex flex-col gap-2">
+      {/* Fullscreen */}
+      <button
+        onClick={toggleFullscreen}
+        className="flex h-11 w-11 items-center justify-center rounded-full border border-border-warm bg-white shadow-lg transition-all hover:shadow-xl hover:scale-105"
+        title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+      >
+        <span className="material-symbols-rounded text-earth/60" style={{ fontSize: "20px" }}>
+          {isFullscreen ? "fullscreen_exit" : "fullscreen"}
+        </span>
+      </button>
+
+      {/* Share */}
+      {isOwner && (
+        <button
+          onClick={() => setShowShareModal(true)}
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-green-seva shadow-lg transition-all hover:shadow-xl hover:scale-105"
+          title={t("tree.share")}
+        >
+          <span className="material-symbols-rounded text-white" style={{ fontSize: "20px" }}>share</span>
+        </button>
+      )}
+
+      {/* Locate Me */}
+      {selfMemberId && (
+        <button
+          onClick={scrollToSelf}
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-accent shadow-lg transition-all hover:shadow-xl hover:scale-105"
+          title="Locate Me"
+        >
+          <span className="material-symbols-rounded text-white" style={{ fontSize: "20px" }}>my_location</span>
+        </button>
+      )}
+    </div>
+  );
+
   // ─── PUBLIC/SHARED VIEW (non-logged-in users) ───
   if (!user) {
     return (
-      <div className="min-h-screen bg-bg-primary pb-16">
-        {/* Minimal Header */}
-        <div className="sticky top-0 z-30 border-b border-border-warm bg-bg-card px-4 py-3">
+      <div ref={treeContainerRef} className="flex min-h-screen flex-col bg-bg-primary">
+        {/* Compact Header */}
+        <div className="z-30 border-b border-border-warm bg-bg-card px-4 py-3">
           <div className="mx-auto flex max-w-4xl items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="material-symbols-rounded text-accent" style={{ fontSize: "24px" }}>park</span>
               <div>
                 <h1 className="font-heading text-lg font-bold text-earth">
-                  {treeMeta.familySurname} {t("stats.families") === "परिवार" ? "परिवार" : "Family"}
+                  {treeMeta.familySurname} {familyLabel}
                 </h1>
                 <p className="text-xs text-earth/40">
                   {treeMeta.gotra} | {treeMeta.village}, {treeMeta.district}
@@ -241,31 +319,19 @@ export default function TreeViewPage() {
           </div>
         </div>
 
-        {/* Tree Only */}
-        <div className="mx-auto max-w-4xl px-4 py-6">
-          {members.length > 0 ? (
-            <FamilyTree members={members} focusedMemberId={selfMemberId} />
-          ) : (
-            <div className="py-12 text-center">
-              <p className="text-earth/50">{t("common.loading")}</p>
-            </div>
-          )}
+        {/* Full-height tree */}
+        <div className="flex-1">
+          {treeContent}
         </div>
 
-        {/* Sticky bottom bar */}
-        <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-border-warm bg-bg-card px-4 py-3 shadow-[0_-2px_8px_rgba(0,0,0,0.05)]">
-          <div className="mx-auto flex max-w-4xl items-center justify-between">
+        {/* Floating action buttons */}
+        {floatingButtons}
+
+        {/* Sticky bottom bar — join CTA */}
+        <div className="z-30 border-t border-border-warm bg-bg-card px-4 py-3">
+          <div className="mx-auto flex max-w-4xl items-center justify-between gap-2">
             <p className="hidden sm:block text-xs text-dark/30">Vansh-Vriksh.unfoldcro.in</p>
             <div className="flex flex-1 sm:flex-none items-center gap-2">
-              {selfMemberId && (
-                <button
-                  onClick={scrollToSelf}
-                  className="flex items-center gap-1.5 rounded-btn border border-border-warm px-3 py-2 text-xs font-medium text-dark/50 transition-colors hover:bg-bg-muted"
-                >
-                  <span className="material-symbols-rounded text-accent" style={{ fontSize: "16px" }}>my_location</span>
-                  Locate Me
-                </button>
-              )}
               <Link href="/verify" className="flex-1 sm:flex-none rounded-btn border border-border-warm px-4 py-2 text-center text-xs font-medium text-dark/50 transition-colors hover:bg-bg-muted">
                 {t("landing.createTree")}
               </Link>
@@ -281,97 +347,75 @@ export default function TreeViewPage() {
 
   // ─── LOGGED-IN VIEW (full experience) ───
   return (
-    <div className="min-h-screen bg-bg-primary pb-16">
-      {/* Header */}
-      <div className="sticky top-0 z-30 border-b border-border-warm bg-bg-card px-4 py-4">
-        <div className="mx-auto max-w-4xl">
-          <div className="flex items-center justify-between">
-            <Link href="/dashboard" className="text-sm text-earth/50 hover:text-gold">
-              &larr; {t("nav.dashboard")}
+    <div ref={treeContainerRef} className="flex min-h-screen flex-col bg-bg-primary">
+      {/* Compact Header */}
+      <div className="z-30 border-b border-border-warm bg-bg-card px-4 py-3">
+        <div className="mx-auto flex max-w-4xl items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link href="/dashboard" className="flex items-center gap-1.5 text-sm text-earth/50 hover:text-gold">
+              <span className="material-symbols-rounded" style={{ fontSize: "18px" }}>arrow_back</span>
             </Link>
+            <div>
+              <h1 className="font-heading text-lg font-bold text-earth">
+                {treeMeta.familySurname} {familyLabel}
+              </h1>
+              <p className="text-xs text-earth/40">
+                {treeMeta.gotra} | {treeMeta.village}, {treeMeta.district} &middot; {members.length} {t("dashboard.members")}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* View Mode Toggle (inline) */}
+            <div className="hidden sm:flex items-center gap-0.5 rounded-full border border-border-warm bg-bg-muted p-0.5">
+              {([
+                { key: "tree" as ViewMode, icon: "account_tree" },
+                { key: "ultralight" as ViewMode, icon: "format_list_bulleted" },
+                { key: "shraddh" as ViewMode, icon: "self_improvement" },
+              ]).map((v) => (
+                <button
+                  key={v.key}
+                  onClick={() => setViewMode(v.key)}
+                  className={`flex h-7 w-7 items-center justify-center rounded-full transition-colors ${
+                    viewMode === v.key ? "bg-accent text-white shadow-sm" : "text-dark/40 hover:text-dark/60"
+                  }`}
+                  title={v.key}
+                >
+                  <span className="material-symbols-rounded" style={{ fontSize: "16px" }}>{v.icon}</span>
+                </button>
+              ))}
+            </div>
             <LanguageToggle />
           </div>
-          <h1 className="mt-2 font-heading text-2xl font-bold text-earth">
-            {treeMeta.familySurname} {t("stats.families") === "परिवार" ? "परिवार" : "Family"}
-          </h1>
-          <p className="text-sm text-earth/50">
-            {treeMeta.gotra} | {treeMeta.village}, {treeMeta.district}, {treeMeta.state}
-          </p>
-          <div className="mt-2 flex gap-3 text-xs text-earth/40">
-            <span>{treeMeta.totalMembers} {t("dashboard.members")}</span>
-            <span>{treeMeta.generations} {t("dashboard.generations")}</span>
-            <span>ID: {treeMeta.treeId}</span>
-          </div>
         </div>
       </div>
 
-      {/* View Mode Toggle */}
-      <div className="sticky top-[106px] z-20 border-b border-border-warm bg-bg-card px-4 py-2">
-        <div className="mx-auto flex max-w-4xl gap-1">
-          {([
-            { key: "tree" as ViewMode, icon: "account_tree", label: "वृक्ष / Tree" },
-            { key: "ultralight" as ViewMode, icon: "format_list_bulleted", label: "हल्का / Light" },
-            { key: "shraddh" as ViewMode, icon: "self_improvement", label: "श्राद्ध / Shraddh" },
-          ]).map((v) => (
-            <button
-              key={v.key}
-              onClick={() => setViewMode(v.key)}
-              className={`flex items-center gap-1.5 rounded-btn px-3 py-1.5 text-xs font-medium transition-colors ${
-                viewMode === v.key
-                  ? "bg-accent text-white"
-                  : "text-dark/50 hover:bg-bg-muted"
-              }`}
-            >
-              <span className="material-symbols-rounded" style={{ fontSize: "16px" }}>{v.icon}</span>
-              {v.label}
-            </button>
-          ))}
-        </div>
+      {/* Mobile view mode toggle */}
+      <div className="sm:hidden flex items-center gap-1 border-b border-border-warm bg-bg-card px-4 py-1.5">
+        {([
+          { key: "tree" as ViewMode, icon: "account_tree", label: "Tree" },
+          { key: "ultralight" as ViewMode, icon: "format_list_bulleted", label: "Light" },
+          { key: "shraddh" as ViewMode, icon: "self_improvement", label: "Shraddh" },
+        ]).map((v) => (
+          <button
+            key={v.key}
+            onClick={() => setViewMode(v.key)}
+            className={`flex items-center gap-1 rounded-btn px-2.5 py-1 text-xs font-medium transition-colors ${
+              viewMode === v.key ? "bg-accent text-white" : "text-dark/40"
+            }`}
+          >
+            <span className="material-symbols-rounded" style={{ fontSize: "14px" }}>{v.icon}</span>
+            {v.label}
+          </button>
+        ))}
       </div>
 
-      {/* Tree Content */}
-      <div className="mx-auto max-w-4xl px-4 py-6">
-        {members.length > 0 ? (
-          <>
-            {viewMode === "tree" && <FamilyTree members={members} focusedMemberId={selfMemberId} />}
-            {viewMode === "ultralight" && <UltraLightTree members={members} />}
-            {viewMode === "shraddh" && <ShraddhView members={members} />}
-          </>
-        ) : (
-          <div className="py-12 text-center">
-            <p className="text-earth/50">{t("common.loading")}</p>
-          </div>
-        )}
+      {/* Full-height tree content */}
+      <div className="flex-1">
+        {treeContent}
       </div>
 
-      {/* Sticky bottom bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-border-warm bg-bg-card px-4 py-2.5 shadow-[0_-2px_8px_rgba(0,0,0,0.05)]">
-        <div className="mx-auto flex max-w-4xl items-center justify-between gap-2">
-          {/* Locate Me */}
-          {selfMemberId && (
-            <button
-              onClick={scrollToSelf}
-              className="flex items-center gap-1.5 rounded-btn border border-border-warm px-3 py-2 text-xs font-medium text-dark/50 transition-colors hover:bg-bg-muted"
-            >
-              <span className="material-symbols-rounded text-accent" style={{ fontSize: "16px" }}>my_location</span>
-              Locate Me
-            </button>
-          )}
-
-          <div className="flex items-center gap-2 ml-auto">
-            {/* Share (for owners) */}
-            {isOwner && (
-              <button
-                onClick={() => setShowShareModal(true)}
-                className="flex items-center gap-1.5 rounded-btn bg-green-seva px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-green-seva/90"
-              >
-                <span className="material-symbols-rounded" style={{ fontSize: "16px" }}>share</span>
-                {t("tree.share")}
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
+      {/* Floating action buttons */}
+      {floatingButtons}
 
       {/* Share Modal */}
       {showShareModal && (

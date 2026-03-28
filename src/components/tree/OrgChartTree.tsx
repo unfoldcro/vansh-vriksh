@@ -78,7 +78,7 @@ function MemberNode({
       onClick={onTap}
       data-member-id={member.id}
       className={`
-        group relative min-w-[152px] max-w-[200px] shrink-0 rounded-xl bg-white p-3 text-left
+        group relative min-w-[168px] max-w-[220px] shrink-0 rounded-xl bg-white p-3 text-left
         transition-all duration-200 hover:shadow-md hover:-translate-y-0.5
         border
         ${isFocused
@@ -115,10 +115,10 @@ function MemberNode({
       </div>
 
       {/* Name */}
-      <p className={`mt-1.5 truncate text-[13px] font-bold leading-tight ${isDeceased ? "text-dark/50" : "text-dark"}`}>
+      <p className={`mt-1.5 text-[13px] font-bold leading-tight break-words ${isDeceased ? "text-dark/50" : "text-dark"}`}>
         {member.nameHi || member.name}
       </p>
-      <p className="truncate text-[10px] leading-tight text-dark/40">
+      <p className="text-[10px] leading-tight text-dark/40 break-words">
         {member.nameHi ? member.name : ""}
       </p>
 
@@ -195,7 +195,7 @@ function BranchConnector({ memberCount }: { memberCount: number }) {
   if (memberCount <= 1) return null;
 
   // Calculate width of the horizontal span
-  const cardWidth = 170; // avg of min-w-[152px] and max-w-[200px]
+  const cardWidth = 194; // avg of min-w-[168px] and max-w-[220px]
   const gap = 12;
   const totalWidth = (memberCount - 1) * (cardWidth + gap);
   const svgWidth = totalWidth + 4;
@@ -576,7 +576,7 @@ const OrgChartTree = forwardRef<OrgChartTreeHandle, OrgChartTreeProps>(function 
       {/* Tree container — draggable + pinch-zoomable */}
       <div
         ref={scrollRef}
-        className="overflow-hidden pb-4 select-none"
+        className="overflow-hidden pb-4 select-none rounded-xl"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}

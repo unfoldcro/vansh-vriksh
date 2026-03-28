@@ -22,7 +22,7 @@ export default function Home() {
 
   const handleEnterDemo = () => {
     localStorage.setItem("vansh-vriksh-demo", "true");
-    router.push("/dashboard?demo=true");
+    router.push("/tree/PATIL-1985-DEMO");
   };
 
 
