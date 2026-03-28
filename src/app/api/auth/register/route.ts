@@ -4,6 +4,7 @@ import { createUser, getUserByEmail } from "@/lib/db/queries";
 import { db } from "@/lib/db/index";
 import { emailVerifications } from "@/lib/db/schema";
 import { sendVerificationEmail } from "@/lib/email";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
@@ -13,8 +14,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Email, password, and name are required" }, { status: 400 });
     }
 
-    if (password.length < 6) {
-      return NextResponse.json({ error: "Password must be at least 6 characters" }, { status: 400 });
+    // Rate limit: 3 registrations per hour per IP
+    const ip = getClientIp(req);
+    const { allowed } = rateLimit(`register:${ip}`, 3, 60 * 60 * 1000);
+    if (!allowed) {
+      return NextResponse.json({ error: "Too many attempts. Try again later." }, { status: 429 });
+    }
+
+    if (password.length < 8) {
+      return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
     }
 
     // Check if user exists

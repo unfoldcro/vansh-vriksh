@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { verifyPassword } from "@/lib/auth/password";
 import { setAuthCookie } from "@/lib/auth/jwt";
 import { getUserByEmail } from "@/lib/db/queries";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
@@ -9,6 +10,13 @@ export async function POST(req: Request) {
 
     if (!email || !password) {
       return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
+    }
+
+    // Rate limit: 5 login attempts per 15 minutes per IP
+    const ip = getClientIp(req);
+    const { allowed } = rateLimit(`login:${ip}`, 5, 15 * 60 * 1000);
+    if (!allowed) {
+      return NextResponse.json({ error: "Too many login attempts. Try again in 15 minutes." }, { status: 429 });
     }
 
     const user = await getUserByEmail(email);
